@@ -1,4 +1,4 @@
-import 'package:antsoup/features/authentication/controllers.onboarding/onboarding_controller.dart';
+import 'package:antsoup/features/authentication/controllers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../utils/constants/sizes.dart';

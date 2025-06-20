@@ -1,4 +1,4 @@
-import 'package:antsoup/features/authentication/controllers.onboarding/onboarding_controller.dart';
+import 'package:antsoup/features/authentication/controllers/onboarding_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 

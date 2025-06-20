@@ -1,4 +1,4 @@
-import 'package:antsoup/features/authentication/controllers.onboarding/onboarding_controller.dart';
+import 'package:antsoup/features/authentication/controllers/onboarding_controller.dart';
 import 'package:antsoup/features/authentication/screens/onboarding/widgets/onboarding_dot_navigation.dart';
 import 'package:antsoup/features/authentication/screens/onboarding/widgets/onboarding_next_button.dart';
 import 'package:antsoup/features/authentication/screens/onboarding/widgets/onboarding_page.dart';
