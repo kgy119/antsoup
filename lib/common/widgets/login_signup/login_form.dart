@@ -26,7 +26,7 @@ class TLoginForm extends StatelessWidget {
             const SizedBox(height: TSizes.spaceBtwInputFields,),
 
             TextFormField(
-              decoration: const InputDecoration(prefixIcon: Icon(Iconsax.direct_right), labelText: TTexts.email, suffixIcon: Icon(Iconsax.eye_slash)),
+              decoration: const InputDecoration(prefixIcon: Icon(Iconsax.direct_right), labelText: TTexts.password, suffixIcon: Icon(Iconsax.eye_slash)),
             ),
             const SizedBox(height: TSizes.spaceBtwInputFields / 2,),
 

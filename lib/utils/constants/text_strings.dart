@@ -12,13 +12,13 @@ class TTexts {
 
 
   // -- OnBoarding Texts
-  static const String onBoardingTitle1 = "Choose your product";
-  static const String onBoardingTitle2 = "Select Payment Method";
-  static const String onBoardingTitle3 = "Deliver at your door step";
+  static const String onBoardingTitle1 = "떡상 주식";
+  static const String onBoardingTitle2 = "매수 가즈아";
+  static const String onBoardingTitle3 = "수익 실현";
 
-  static const String onBoardingSubTitle1 = "Welcome to a World of Limitless Choices - Your Perfect Product Awaits!";
-  static const String onBoardingSubTitle2 = "For Seamless Transactions, Choose Your Payment Path - Your Convenience, Our Priority!";
-  static const String onBoardingSubTitle3 = "From Our Doorstep to Yours - Swift, Secure, and Contactless Delivery!";
+  static const String onBoardingSubTitle1 = "수많은 주식중에 떡상할 주식 선별하기!";
+  static const String onBoardingSubTitle2 = "떡상 주식 선별 후 매수 ㄱㄱ!";
+  static const String onBoardingSubTitle3 = "떡상 후 수익 실현 ㄱㄱ!";
 
 
   // -- Authentication Forms
@@ -44,18 +44,18 @@ class TTexts {
 
 
   // -- Authentication Headings
-  static const String loginTitle = "Welcome back,";
-  static const String loginSubTitle = "Discover Limitless Choices and Unmatched Convenience.";
-  static const String signupTitle = "Let’s create your account";
-  static const String forgetPasswordTitle = "Forget password";
-  static const String forgetPasswordSubTitle = "Don’t worry sometimes people can forget too, enter your email and we will send you a password reset link.";
-  static const String changeYourPasswordTitle = "Password Reset Email Sent";
-  static const String changeYourPasswordSubTitle = "Your Account Security is Our Priority! We've Sent You a Secure Link to Safely Change Your Password and Keep Your Account Protected.";
-  static const String confirmEmail = "Verify your email address!";
-  static const String confirmEmailSubTitle = "Congratulations! Your Account Awaits: Verify Your Email to Start Shopping and Experience a World of Unrivaled Deals and Personalized Offers.";
-  static const String emailNotReceivedMessage = "Didn’t get the email? Check your junk/spam or resend it.";
-  static const String yourAccountCreatedTitle = "Your account successfully created!";
-  static const String yourAccountCreatedSubTitle = "Welcome to Your Ultimate Shopping Destination: Your Account is Created, Unleash the Joy of Seamless Online Shopping!";
+  static const String loginTitle = "환영합니다.";
+  static const String loginSubTitle = "주식 고수들의 모임 개미탕.";
+  static const String signupTitle = "계정을 만들어볼까요?";
+  static const String forgetPasswordTitle = "비밀번호를 잊으셨나요?";
+  static const String forgetPasswordSubTitle = "걱정 마세요! 가끔 그럴 수도 있죠. 이메일을 입력해주시면 비밀번호 재설정 링크를 보내드릴게요.";
+  static const String changeYourPasswordTitle = "비밀번호 재설정 이메일을 보냈어요!";
+  static const String changeYourPasswordSubTitle = "회원님의 소중한 계정을 안전하게 지켜드릴게요. 이메일을 확인하고 비밀번호를 바꿔주세요!";
+  static const String confirmEmail = "이메일을 확인해주세요!";
+  static const String confirmEmailSubTitle = "계정이 거의 완성됐어요! 이메일을 인증하시면, 즐거운 쇼핑 세상이 기다리고 있어요 :)";
+  static const String emailNotReceivedMessage = "이메일이 안 보이시나요? 스팸함을 확인하거나 다시 보내보세요!";
+  static const String yourAccountCreatedTitle = "계정이 만들어졌어요!";
+  static const String yourAccountCreatedSubTitle = "환영합니다! 이제 편리하고 즐거운 쇼핑을 마음껏 즐겨보세요!";
 
 
   // -- Product
