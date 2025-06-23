@@ -17,46 +17,19 @@ class TSignupForm extends StatelessWidget {
       key: controller.signupFormKey,
       child: Column(
         children: [
-          /// First & Last Name
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller.firstNameController,
-                  validator: controller.validateName,
-                  decoration: const InputDecoration(
-                    labelText: TTexts.firstName,
-                    prefixIcon: Icon(Iconsax.user),
-                  ),
-                ),
-              ),
-              const SizedBox(width: TSizes.spaceBtwInputFields),
-              Expanded(
-                child: TextFormField(
-                  controller: controller.lastNameController,
-                  validator: controller.validateName,
-                  decoration: const InputDecoration(
-                    labelText: TTexts.lastName,
-                    prefixIcon: Icon(Iconsax.user),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: TSizes.spaceBtwInputFields),
-
-          /// Username
+          /// Username (필수 - UserModel에서 required)
           TextFormField(
             controller: controller.usernameController,
             validator: controller.validateUsername,
             decoration: const InputDecoration(
               labelText: TTexts.username,
               prefixIcon: Icon(Iconsax.user_edit),
+              hintText: '영문, 숫자, 언더스코어(_)만 사용 가능',
             ),
           ),
           const SizedBox(height: TSizes.spaceBtwInputFields),
 
-          /// Email
+          /// Email (필수 - UserModel에서 required)
           TextFormField(
             controller: controller.emailController,
             validator: controller.validateEmail,
@@ -64,11 +37,12 @@ class TSignupForm extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: TTexts.email,
               prefixIcon: Icon(Iconsax.direct),
+              hintText: '인증을 위해 유효한 이메일을 입력해주세요',
             ),
           ),
           const SizedBox(height: TSizes.spaceBtwInputFields),
 
-          /// Phone Number (Optional)
+          /// Phone Number (선택사항 - UserModel에서 nullable)
           TextFormField(
             controller: controller.phoneController,
             validator: controller.validatePhoneNumber,
@@ -76,22 +50,40 @@ class TSignupForm extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: TTexts.phoneNo,
               prefixIcon: Icon(Iconsax.call),
-              hintText: '선택사항',
+              hintText: '선택사항 (예: 010-1234-5678)',
             ),
           ),
           const SizedBox(height: TSizes.spaceBtwInputFields),
 
-          /// Password
+          /// Password (필수)
           Obx(() => TextFormField(
             controller: controller.passwordController,
             validator: controller.validatePassword,
-            obscureText: controller.hidePassword.value, // observable 변수 사용
+            obscureText: controller.hidePassword.value,
             decoration: InputDecoration(
               labelText: TTexts.password,
               prefixIcon: const Icon(Iconsax.password_check),
+              hintText: '영문 대소문자, 숫자, 특수문자 포함 6자 이상',
               suffixIcon: IconButton(
                 onPressed: () => controller.hidePassword.value = !controller.hidePassword.value,
                 icon: Icon(controller.hidePassword.value ? Iconsax.eye_slash : Iconsax.eye),
+              ),
+            ),
+          )),
+          const SizedBox(height: TSizes.spaceBtwInputFields),
+
+          /// Confirm Password (추가)
+          Obx(() => TextFormField(
+            controller: controller.confirmPasswordController,
+            validator: controller.validateConfirmPassword,
+            obscureText: controller.hideConfirmPassword.value,
+            decoration: InputDecoration(
+              labelText: '비밀번호 확인',
+              prefixIcon: const Icon(Iconsax.password_check),
+              hintText: '위에서 입력한 비밀번호를 다시 입력해주세요',
+              suffixIcon: IconButton(
+                onPressed: () => controller.hideConfirmPassword.value = !controller.hideConfirmPassword.value,
+                icon: Icon(controller.hideConfirmPassword.value ? Iconsax.eye_slash : Iconsax.eye),
               ),
             ),
           )),

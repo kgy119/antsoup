@@ -8,7 +8,6 @@ import '../../../utils/validators/validation.dart';
 import '../../../navigation_menu.dart';
 import '../screens/login/login.dart';
 import '../screens/signup/verify_email.dart';
-import '../screens/signup/signup.dart';
 
 class AuthenticationController extends GetxController {
   static AuthenticationController get instance => Get.find();
@@ -20,9 +19,8 @@ class AuthenticationController extends GetxController {
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController(); // 추가
   final phoneController = TextEditingController();
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
 
   // Form Keys
   final signupFormKey = GlobalKey<FormState>();
@@ -53,9 +51,8 @@ class AuthenticationController extends GetxController {
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
     phoneController.dispose();
-    firstNameController.dispose();
-    lastNameController.dispose();
     super.onClose();
   }
 
@@ -77,24 +74,32 @@ class AuthenticationController extends GetxController {
       // 로딩 시작
       isLoading.value = true;
 
+      // 전화번호 포맷팅 (선택사항)
+      String? formattedPhone;
+      if (phoneController.text.trim().isNotEmpty) {
+        formattedPhone = phoneController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+        // 한국 전화번호 형식으로 변환 (010-1234-5678)
+        if (formattedPhone.length == 11 && formattedPhone.startsWith('010')) {
+          formattedPhone = '${formattedPhone.substring(0, 3)}-${formattedPhone.substring(3, 7)}-${formattedPhone.substring(7)}';
+        }
+      }
+
       // 회원가입 처리
       final user = await _authRepository.signUp(
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
-        phoneNumber: phoneController.text.trim().isNotEmpty
-            ? phoneController.text.trim()
-            : null,
+        phoneNumber: formattedPhone,
       );
 
       // 성공 메시지
       TLoaders.successSnacBar(
         title: '회원가입 성공!',
-        message: '계정이 성공적으로 생성되었습니다.',
+        message: '계정이 성공적으로 생성되었습니다. 이메일 인증을 진행해주세요.',
       );
 
       // 이메일 인증 화면으로 이동
-      Get.to(() => const VerifyEmailScreen());
+      Get.to(() => VerifyEmailScreen(email: emailController.text.trim()));
 
     } catch (e) {
       // 에러 처리
@@ -126,6 +131,16 @@ class AuthenticationController extends GetxController {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
+      // 이메일 인증 확인
+      if (!user.emailVerified) {
+        TLoaders.warningSnacBar(
+          title: '이메일 인증 필요',
+          message: '이메일 인증을 완료해주세요.',
+        );
+        Get.to(() => VerifyEmailScreen(email: user.email));
+        return;
+      }
 
       // 성공 메시지
       TLoaders.successSnacBar(
@@ -351,14 +366,29 @@ class AuthenticationController extends GetxController {
     }
   }
 
+  /// 이메일 인증 상태 확인
+  Future<void> checkEmailVerificationStatus() async {
+    try {
+      final user = await _authRepository.getCurrentUser();
+      if (user.emailVerified) {
+        TLoaders.successSnacBar(
+          title: '이메일 인증 완료',
+          message: '이메일 인증이 완료되었습니다.',
+        );
+        Get.offAll(() => const NavigationMenu());
+      }
+    } catch (e) {
+      // 에러는 무시 (주기적으로 체크하므로)
+    }
+  }
+
   /// 폼 초기화
   void clearForms() {
     usernameController.clear();
     emailController.clear();
     passwordController.clear();
+    confirmPasswordController.clear();
     phoneController.clear();
-    firstNameController.clear();
-    lastNameController.clear();
     privacyPolicyAccepted.value = false;
   }
 
@@ -372,10 +402,33 @@ class AuthenticationController extends GetxController {
     return TValidator.validatePassword(password);
   }
 
+  /// 비밀번호 확인 유효성 검사
+  String? validateConfirmPassword(String? confirmPassword) {
+    if (confirmPassword == null || confirmPassword.isEmpty) {
+      return '비밀번호 확인을 입력해주세요.';
+    }
+    if (confirmPassword != passwordController.text) {
+      return '비밀번호가 일치하지 않습니다.';
+    }
+    return null;
+  }
+
   /// 전화번호 유효성 검사
   String? validatePhoneNumber(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.isEmpty) return null; // 선택사항
-    return TValidator.validatePhoneNumber(phoneNumber);
+
+    // 한국 전화번호 형식 검증 (010-xxxx-xxxx 또는 01xxxxxxxxx)
+    String cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (cleanPhone.length != 11) {
+      return '전화번호는 11자리여야 합니다.';
+    }
+
+    if (!cleanPhone.startsWith('010')) {
+      return '010으로 시작하는 전화번호를 입력해주세요.';
+    }
+
+    return null;
   }
 
   /// 사용자명 유효성 검사
@@ -391,17 +444,6 @@ class AuthenticationController extends GetxController {
     }
     if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
       return '사용자명은 영문, 숫자, 언더스코어(_)만 사용 가능합니다.';
-    }
-    return null;
-  }
-
-  /// 이름 유효성 검사
-  String? validateName(String? name) {
-    if (name == null || name.isEmpty) {
-      return '이름을 입력해주세요.';
-    }
-    if (name.length < 2) {
-      return '이름은 최소 2자 이상이어야 합니다.';
     }
     return null;
   }

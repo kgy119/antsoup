@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import '../features/authentication/controllers/auth_controller.dart';
 import '../features/authentication/repositories/auth_repository.dart';
 import '../utils/helpers/network_manager.dart';
