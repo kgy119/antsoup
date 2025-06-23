@@ -31,15 +31,18 @@ class TLoginForm extends StatelessWidget {
             ),
             const SizedBox(height: TSizes.spaceBtwInputFields),
 
-            /// Password
+            /// Password - Obx 수정
             Obx(() => TextFormField(
               controller: controller.passwordController,
               validator: controller.validatePassword,
-              obscureText: true,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Iconsax.password_check),
+              obscureText: controller.hidePassword.value, // observable 변수 사용
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Iconsax.password_check),
                 labelText: TTexts.password,
-                suffixIcon: Icon(Iconsax.eye_slash),
+                suffixIcon: IconButton(
+                  onPressed: () => controller.hidePassword.value = !controller.hidePassword.value,
+                  icon: Icon(controller.hidePassword.value ? Iconsax.eye_slash : Iconsax.eye),
+                ),
               ),
             )),
             const SizedBox(height: TSizes.spaceBtwInputFields / 2),
@@ -49,12 +52,15 @@ class TLoginForm extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 /// Remember Me
-                Row(
+                Obx(() => Row(
                   children: [
-                    Checkbox(value: true, onChanged: (value) {}),
+                    Checkbox(
+                        value: controller.rememberMe.value,
+                        onChanged: (value) => controller.rememberMe.value = value ?? false
+                    ),
                     const Text(TTexts.rememberMe),
                   ],
-                ),
+                )),
 
                 /// Forget Password
                 TextButton(

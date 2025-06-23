@@ -28,6 +28,13 @@ class AuthenticationController extends GetxController {
   final signupFormKey = GlobalKey<FormState>();
   final loginFormKey = GlobalKey<FormState>();
 
+  // 비밀번호 표시/숨김 상태
+  final RxBool hidePassword = true.obs;
+  final RxBool hideConfirmPassword = true.obs;
+
+  // Remember Me 상태
+  final RxBool rememberMe = false.obs;
+
   // Loading States
   final RxBool isLoading = false.obs;
   final RxBool isGoogleLoading = false.obs;

@@ -85,13 +85,17 @@ class TSignupForm extends StatelessWidget {
           Obx(() => TextFormField(
             controller: controller.passwordController,
             validator: controller.validatePassword,
-            obscureText: true,
-            decoration: const InputDecoration(
+            obscureText: controller.hidePassword.value, // observable 변수 사용
+            decoration: InputDecoration(
               labelText: TTexts.password,
-              prefixIcon: Icon(Iconsax.password_check),
-              suffixIcon: Icon(Iconsax.eye_slash),
+              prefixIcon: const Icon(Iconsax.password_check),
+              suffixIcon: IconButton(
+                onPressed: () => controller.hidePassword.value = !controller.hidePassword.value,
+                icon: Icon(controller.hidePassword.value ? Iconsax.eye_slash : Iconsax.eye),
+              ),
             ),
           )),
+
           const SizedBox(height: TSizes.spaceBtwSections),
 
           /// Terms & Conditions Checkbox

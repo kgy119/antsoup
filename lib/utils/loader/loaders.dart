@@ -8,7 +8,7 @@ import '../constants/colors.dart';
 class TLoaders {
   static hideSnackBar() => ScaffoldMessenger.of(Get.context!).hideCurrentSnackBar();
 
-  staticcustomToast({required message}){
+  static customToast({required message}){
     ScaffoldMessenger.of(Get.context!).showSnackBar(
         SnackBar(
           elevation: 0,

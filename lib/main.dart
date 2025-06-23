@@ -11,8 +11,5 @@ void main() async {
   // GetStorage 초기화
   await GetStorage.init();
 
-  // 일반 바인딩 설정
-  await Get.putAsync(() => GeneralBindings().dependencies());
-
   runApp(const App());
 }

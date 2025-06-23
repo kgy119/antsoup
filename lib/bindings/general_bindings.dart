@@ -6,10 +6,7 @@ import '../utils/helpers/network_manager.dart';
 
 class GeneralBindings extends Bindings {
   @override
-  Future<void> dependencies() async {
-    // GetStorage 초기화
-    await GetStorage.init();
-
+  void dependencies() {
     // 네트워크 매니저
     Get.put(NetworkManager());
 
