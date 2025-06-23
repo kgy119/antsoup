@@ -415,36 +415,11 @@ class AuthenticationController extends GetxController {
 
   /// 전화번호 유효성 검사
   String? validatePhoneNumber(String? phoneNumber) {
-    if (phoneNumber == null || phoneNumber.isEmpty) return null; // 선택사항
-
-    // 한국 전화번호 형식 검증 (010-xxxx-xxxx 또는 01xxxxxxxxx)
-    String cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (cleanPhone.length != 11) {
-      return '전화번호는 11자리여야 합니다.';
-    }
-
-    if (!cleanPhone.startsWith('010')) {
-      return '010으로 시작하는 전화번호를 입력해주세요.';
-    }
-
-    return null;
+    return TValidator.validatePhoneNumber(phoneNumber);
   }
 
-  /// 사용자명 유효성 검사
+  /// 사용자명 유효성 검사 (TValidator 사용)
   String? validateUsername(String? username) {
-    if (username == null || username.isEmpty) {
-      return '사용자명을 입력해주세요.';
-    }
-    if (username.length < 3) {
-      return '사용자명은 최소 3자 이상이어야 합니다.';
-    }
-    if (username.length > 20) {
-      return '사용자명은 최대 20자까지 가능합니다.';
-    }
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
-      return '사용자명은 영문, 숫자, 언더스코어(_)만 사용 가능합니다.';
-    }
-    return null;
+    return TValidator.validateUsername(username);
   }
 }

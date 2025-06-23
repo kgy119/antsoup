@@ -22,7 +22,7 @@ class TValidator {
     return null;
   }
 
-  /// 비밀번호 유효성 검사 (한국 서비스에 맞게 조정)
+  /// 비밀번호 유효성 검사 (한국 서비스에 맞게 조정 - 대문자 요구사항 제거)
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return '비밀번호를 입력해주세요.';
@@ -38,14 +38,9 @@ class TValidator {
       return '비밀번호는 최대 128자까지 가능합니다.';
     }
 
-    // 영문 대문자 확인
-    if (!value.contains(RegExp(r'[A-Z]'))) {
-      return '비밀번호에 영문 대문자가 하나 이상 포함되어야 합니다.';
-    }
-
-    // 영문 소문자 확인
-    if (!value.contains(RegExp(r'[a-z]'))) {
-      return '비밀번호에 영문 소문자가 하나 이상 포함되어야 합니다.';
+    // 영문자 확인 (대소문자 구분 없음)
+    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+      return '비밀번호에 영문자가 하나 이상 포함되어야 합니다.';
     }
 
     // 숫자 확인
@@ -94,7 +89,7 @@ class TValidator {
     return null;
   }
 
-  /// 사용자명 유효성 검사
+  /// 사용자명 유효성 검사 (한글 허용)
   static String? validateUsername(String? value) {
     if (value == null || value.isEmpty) {
       return '사용자명을 입력해주세요.';
@@ -109,9 +104,9 @@ class TValidator {
       return '사용자명은 최대 20자까지 가능합니다.';
     }
 
-    // 영문, 숫자, 언더스코어만 허용
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-      return '사용자명은 영문, 숫자, 언더스코어(_)만 사용 가능합니다.';
+    // 한글, 영문, 숫자, 언더스코어 허용
+    if (!RegExp(r'^[가-힣a-zA-Z0-9_]+$').hasMatch(value)) {
+      return '사용자명은 한글, 영문, 숫자, 언더스코어(_)만 사용 가능합니다.';
     }
 
     // 언더스코어로 시작하거나 끝나는 경우 제한
@@ -124,14 +119,15 @@ class TValidator {
       return '연속된 언더스코어(_)는 사용할 수 없습니다.';
     }
 
-    // 예약어 확인
+    // 예약어 확인 (한글 예약어도 추가)
     final reservedWords = [
       'admin', 'administrator', 'root', 'user', 'guest', 'anonymous',
       'null', 'undefined', 'system', 'api', 'www', 'mail', 'ftp',
-      'test', 'demo', 'support', 'help', 'info', 'contact'
+      'test', 'demo', 'support', 'help', 'info', 'contact',
+      '관리자', '운영자', '테스트', '시스템', '고객센터'
     ];
 
-    if (reservedWords.contains(value.toLowerCase())) {
+    if (reservedWords.contains(value.toLowerCase()) || reservedWords.contains(value)) {
       return '사용할 수 없는 사용자명입니다.';
     }
 

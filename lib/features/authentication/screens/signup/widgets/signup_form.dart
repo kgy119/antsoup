@@ -24,7 +24,7 @@ class TSignupForm extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: TTexts.username,
               prefixIcon: Icon(Iconsax.user_edit),
-              hintText: '영문, 숫자, 언더스코어(_)만 사용 가능',
+              hintText: '한글, 영문, 숫자, 언더스코어(_) 사용 가능',
             ),
           ),
           const SizedBox(height: TSizes.spaceBtwInputFields),
@@ -63,7 +63,7 @@ class TSignupForm extends StatelessWidget {
             decoration: InputDecoration(
               labelText: TTexts.password,
               prefixIcon: const Icon(Iconsax.password_check),
-              hintText: '영문 대소문자, 숫자, 특수문자 포함 6자 이상',
+              hintText: '영문, 숫자, 특수문자 포함 6자 이상',
               suffixIcon: IconButton(
                 onPressed: () => controller.hidePassword.value = !controller.hidePassword.value,
                 icon: Icon(controller.hidePassword.value ? Iconsax.eye_slash : Iconsax.eye),

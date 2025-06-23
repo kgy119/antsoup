@@ -82,7 +82,7 @@ class AuthenticationRepository extends GetxController {
       );
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/signup'),
+        Uri.parse('$_baseUrl/auth/signup.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -125,7 +125,7 @@ class AuthenticationRepository extends GetxController {
   Future<void> _checkUsernameAvailability(String username) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/auth/check-username?username=$username'),
+        Uri.parse('$_baseUrl/auth/check-username.php?username=$username'),
         headers: {'Accept': 'application/json'},
       );
 
@@ -145,7 +145,7 @@ class AuthenticationRepository extends GetxController {
   Future<void> _checkEmailAvailability(String email) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/auth/check-email?email=$email'),
+        Uri.parse('$_baseUrl/auth/check-email.php?email=$email'),
         headers: {'Accept': 'application/json'},
       );
 
@@ -168,7 +168,7 @@ class AuthenticationRepository extends GetxController {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/login'),
+        Uri.parse('$_baseUrl/auth/login.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -292,7 +292,7 @@ class AuthenticationRepository extends GetxController {
       if (token != null) {
         // 서버에 로그아웃 요청
         await http.post(
-          Uri.parse('$_baseUrl/auth/logout'),
+          Uri.parse('$_baseUrl/auth/logout.php'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -314,7 +314,7 @@ class AuthenticationRepository extends GetxController {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/password-reset'),
+        Uri.parse('$_baseUrl/auth/password-reset.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -343,7 +343,7 @@ class AuthenticationRepository extends GetxController {
       }
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/verify-email'),
+        Uri.parse('$_baseUrl/auth/verify-email.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -372,7 +372,7 @@ class AuthenticationRepository extends GetxController {
       }
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/auth/user'),
+        Uri.parse('$_baseUrl/auth/user.php'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -404,7 +404,7 @@ class AuthenticationRepository extends GetxController {
       }
 
       final response = await http.put(
-        Uri.parse('$_baseUrl/auth/user'),
+        Uri.parse('$_baseUrl/auth/user.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -438,7 +438,7 @@ class AuthenticationRepository extends GetxController {
       }
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/verify-email-confirm'),
+        Uri.parse('$_baseUrl/auth/verify-email-confirm.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
