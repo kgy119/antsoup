@@ -17,18 +17,6 @@ class TSignupForm extends StatelessWidget {
       key: controller.signupFormKey,
       child: Column(
         children: [
-          /// Username (필수 - UserModel에서 required)
-          TextFormField(
-            controller: controller.usernameController,
-            validator: controller.validateUsername,
-            decoration: const InputDecoration(
-              labelText: TTexts.username,
-              prefixIcon: Icon(Iconsax.user_edit),
-              hintText: '한글, 영문, 숫자, 언더스코어(_) 사용 가능',
-            ),
-          ),
-          const SizedBox(height: TSizes.spaceBtwInputFields),
-
           /// Email (필수 - UserModel에서 required)
           TextFormField(
             controller: controller.emailController,
@@ -38,6 +26,18 @@ class TSignupForm extends StatelessWidget {
               labelText: TTexts.email,
               prefixIcon: Icon(Iconsax.direct),
               hintText: '인증을 위해 유효한 이메일을 입력해주세요',
+            ),
+          ),
+          const SizedBox(height: TSizes.spaceBtwInputFields),
+
+          /// Username (필수 - UserModel에서 required)
+          TextFormField(
+            controller: controller.usernameController,
+            validator: controller.validateUsername,
+            decoration: const InputDecoration(
+              labelText: TTexts.username,
+              prefixIcon: Icon(Iconsax.user_edit),
+              hintText: '한글, 영문, 숫자, 언더스코어(_) 사용 가능',
             ),
           ),
           const SizedBox(height: TSizes.spaceBtwInputFields),

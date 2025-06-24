@@ -72,14 +72,16 @@ class AuthenticationRepository extends GetxController {
       // 이메일 중복 확인
       await _checkEmailAvailability(email);
 
-      final user = UserModel(
-        username: username,
-        email: email,
-        phoneNumber: phoneNumber,
-        provider: 'local',
-        emailVerified: false, // 가입 시에는 미인증 상태
-        phoneVerified: false,
-      );
+      final requestData = {
+        'username': username,
+        'email': email,
+        'password': password,
+      };
+
+      // 전화번호가 있으면 추가
+      if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        requestData['phone_number'] = phoneNumber;
+      }
 
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/signup.php'),
@@ -87,31 +89,28 @@ class AuthenticationRepository extends GetxController {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode(user.toSignUpJson(password)),
+        body: jsonEncode(requestData),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final newUser = UserModel.fromJson(data['user']);
+        // 서버 응답 구조에 맞게 수정
+        if (data['success'] == true && data['user'] != null) {
+          final newUser = UserModel.fromJson(data['user']);
 
-        // 토큰이 있다면 저장 (임시 토큰일 수 있음)
-        if (data['token'] != null) {
-          await _localStorage.saveData('auth_token', data['token']);
+          // 토큰이 있다면 저장
+          if (data['token'] != null) {
+            await _localStorage.saveData('auth_token', data['token']);
+          }
+
+          // 사용자 정보 저장
+          await saveUserToStorage(newUser);
+
+          return newUser;
+        } else {
+          throw TExceptions(data['message'] ?? '회원가입에 실패했습니다.');
         }
-
-        // 사용자 정보 저장
-        await saveUserToStorage(newUser);
-
-        // 이메일 인증 자동 전송
-        try {
-          await sendEmailVerification();
-        } catch (e) {
-          // 이메일 전송 실패해도 회원가입은 성공으로 처리
-          print('이메일 인증 전송 실패: $e');
-        }
-
-        return newUser;
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -125,13 +124,13 @@ class AuthenticationRepository extends GetxController {
   Future<void> _checkUsernameAvailability(String username) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/auth/check-username.php?username=$username'),
+        Uri.parse('$_baseUrl/auth/check-username.php?username=${Uri.encodeComponent(username)}'),
         headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['exists'] == true) {
+        if (data['success'] == true && data['exists'] == true) {
           throw TExceptions('이미 사용 중인 사용자명입니다.');
         }
       }
@@ -145,13 +144,13 @@ class AuthenticationRepository extends GetxController {
   Future<void> _checkEmailAvailability(String email) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/auth/check-email.php?email=$email'),
+        Uri.parse('$_baseUrl/auth/check-email.php?email=${Uri.encodeComponent(email)}'),
         headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['exists'] == true) {
+        if (data['success'] == true && data['exists'] == true) {
           throw TExceptions('이미 가입된 이메일 주소입니다.');
         }
       }
@@ -182,17 +181,22 @@ class AuthenticationRepository extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final user = UserModel.fromJson(data['user']);
+        // 서버 응답 구조에 맞게 수정
+        if (data['success'] == true && data['user'] != null) {
+          final user = UserModel.fromJson(data['user']);
 
-        // 토큰 저장
-        if (data['token'] != null) {
-          await _localStorage.saveData('auth_token', data['token']);
+          // 토큰 저장
+          if (data['token'] != null) {
+            await _localStorage.saveData('auth_token', data['token']);
+          }
+
+          // 사용자 정보 저장
+          await saveUserToStorage(user);
+
+          return user;
+        } else {
+          throw TExceptions(data['message'] ?? '로그인에 실패했습니다.');
         }
-
-        // 사용자 정보 저장
-        await saveUserToStorage(user);
-
-        return user;
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -208,32 +212,41 @@ class AuthenticationRepository extends GetxController {
     String? username,
   }) async {
     try {
+      final requestData = {
+        'google_token': googleToken,
+      };
+
+      if (username != null) {
+        requestData['username'] = username;
+      }
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/google'),
+        Uri.parse('$_baseUrl/auth/google.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'google_token': googleToken,
-          if (username != null) 'username': username,
-        }),
+        body: jsonEncode(requestData),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final user = UserModel.fromJson(data['user']);
+        if (data['success'] == true && data['user'] != null) {
+          final user = UserModel.fromJson(data['user']);
 
-        // 토큰 저장
-        if (data['token'] != null) {
-          await _localStorage.saveData('auth_token', data['token']);
+          // 토큰 저장
+          if (data['token'] != null) {
+            await _localStorage.saveData('auth_token', data['token']);
+          }
+
+          // 사용자 정보 저장
+          await saveUserToStorage(user);
+
+          return user;
+        } else {
+          throw TExceptions(data['message'] ?? '구글 로그인에 실패했습니다.');
         }
-
-        // 사용자 정보 저장
-        await saveUserToStorage(user);
-
-        return user;
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -249,32 +262,41 @@ class AuthenticationRepository extends GetxController {
     String? username,
   }) async {
     try {
+      final requestData = {
+        'facebook_token': facebookToken,
+      };
+
+      if (username != null) {
+        requestData['username'] = username;
+      }
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/facebook'),
+        Uri.parse('$_baseUrl/auth/facebook.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'facebook_token': facebookToken,
-          if (username != null) 'username': username,
-        }),
+        body: jsonEncode(requestData),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final user = UserModel.fromJson(data['user']);
+        if (data['success'] == true && data['user'] != null) {
+          final user = UserModel.fromJson(data['user']);
 
-        // 토큰 저장
-        if (data['token'] != null) {
-          await _localStorage.saveData('auth_token', data['token']);
+          // 토큰 저장
+          if (data['token'] != null) {
+            await _localStorage.saveData('auth_token', data['token']);
+          }
+
+          // 사용자 정보 저장
+          await saveUserToStorage(user);
+
+          return user;
+        } else {
+          throw TExceptions(data['message'] ?? '페이스북 로그인에 실패했습니다.');
         }
-
-        // 사용자 정보 저장
-        await saveUserToStorage(user);
-
-        return user;
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -291,14 +313,22 @@ class AuthenticationRepository extends GetxController {
 
       if (token != null) {
         // 서버에 로그아웃 요청
-        await http.post(
-          Uri.parse('$_baseUrl/auth/logout.php'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-        );
+        try {
+          final response = await http.post(
+            Uri.parse('$_baseUrl/auth/logout.php'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'Accept': 'application/json',
+            },
+          );
+
+          // 로그아웃 응답은 성공/실패와 관계없이 로컬 정보는 삭제
+          print('Logout response: ${response.statusCode}');
+        } catch (e) {
+          // 서버 로그아웃 실패해도 로컬 정보는 삭제
+          print('Server logout failed: $e');
+        }
       }
 
       // 로컬 저장소에서 사용자 정보 제거
@@ -324,7 +354,10 @@ class AuthenticationRepository extends GetxController {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200 && data['success'] == true) {
+        // 성공
+        return;
+      } else {
         throw TExceptions(_parseErrorMessage(data));
       }
     } catch (e) {
@@ -353,7 +386,10 @@ class AuthenticationRepository extends GetxController {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200 && data['success'] == true) {
+        // 성공
+        return;
+      } else {
         throw TExceptions(_parseErrorMessage(data));
       }
     } catch (e) {
@@ -382,9 +418,13 @@ class AuthenticationRepository extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final user = UserModel.fromJson(data['user']);
-        await saveUserToStorage(user);
-        return user;
+        if (data['success'] == true && data['user'] != null) {
+          final user = UserModel.fromJson(data['user']);
+          await saveUserToStorage(user);
+          return user;
+        } else {
+          throw TExceptions(data['message'] ?? '사용자 정보를 가져올 수 없습니다.');
+        }
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -416,9 +456,13 @@ class AuthenticationRepository extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final updatedUser = UserModel.fromJson(data['user']);
-        await saveUserToStorage(updatedUser);
-        return updatedUser;
+        if (data['success'] == true && data['user'] != null) {
+          final updatedUser = UserModel.fromJson(data['user']);
+          await saveUserToStorage(updatedUser);
+          return updatedUser;
+        } else {
+          throw TExceptions(data['message'] ?? '사용자 정보 업데이트에 실패했습니다.');
+        }
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
@@ -449,7 +493,7 @@ class AuthenticationRepository extends GetxController {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && data['success'] == true) {
         // 사용자 정보 업데이트
         final updatedUser = currentUser.copyWith(emailVerified: true);
         await saveUserToStorage(updatedUser);
@@ -464,6 +508,7 @@ class AuthenticationRepository extends GetxController {
 
   /// 에러 메시지 파싱
   String _parseErrorMessage(Map<String, dynamic> data) {
+    // 서버 응답 구조에 맞게 수정
     if (data['message'] != null) {
       return data['message'];
     } else if (data['error'] != null) {
@@ -485,4 +530,18 @@ class AuthenticationRepository extends GetxController {
   /// 토큰 가져오기
   String? get authToken => _localStorage.readData<String>('auth_token');
 
+  /// 서버 연결 테스트
+  Future<bool> testServerConnection() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/auth/check-username.php?username=test_connection'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+
+      return response.statusCode == 200 || response.statusCode == 400;
+    } catch (e) {
+      print('Server connection test failed: $e');
+      return false;
+    }
+  }
 }

@@ -1,29 +1,79 @@
+import 'package:antsoup/common/widgets/images/t_circular_image.dart';
+import 'package:antsoup/features/personalization/controllers/user_controller.dart';
 import 'package:antsoup/features/personalization/screens/profile/profile.dart';
+import 'package:antsoup/utils/constants/colors.dart';
+import 'package:antsoup/utils/constants/image_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../../../utils/constants/colors.dart';
-import '../../../utils/constants/image_strings.dart';
-import '../images/t_circular_image.dart';
-
 class TUserProfileTitle extends StatelessWidget {
-  const TUserProfileTitle({
-    super.key,
-  });
+  const TUserProfileTitle({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(UserController());
+
     return ListTile(
-      leading: const TCircularImage(
-        image: TImages.user,
+      leading: Obx(() => TCircularImage(
+        image: controller.userProfile.value.profilePicture ?? TImages.user,
         width: 50,
         height: 50,
         padding: 0,
+        isNetworkImage: controller.userProfile.value.profilePicture != null,
+      )),
+      title: Obx(() => Text(
+        controller.userProfile.value.fullName.isEmpty
+            ? controller.userProfile.value.username
+            : controller.userProfile.value.fullName,
+        style: Theme.of(context).textTheme.headlineSmall!.apply(color: TColors.white),
+      )),
+      subtitle: Obx(() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            controller.userProfile.value.email,
+            style: Theme.of(context).textTheme.bodyMedium!.apply(color: TColors.white),
+          ),
+          if (controller.userProfile.value.phoneNumber != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              controller.userProfile.value.phoneNumber!,
+              style: Theme.of(context).textTheme.bodySmall!.apply(color: TColors.white),
+            ),
+          ],
+          const SizedBox(height: 4),
+          /// Profile Completeness Indicator
+          Row(
+            children: [
+              Text(
+                '프로필 ${(controller.profileCompleteness * 100).toInt()}% 완성',
+                style: Theme.of(context).textTheme.bodySmall!.apply(color: TColors.white),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: controller.profileCompleteness,
+                  backgroundColor: TColors.white.withOpacity(0.3),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    controller.profileCompleteness < 0.5
+                        ? Colors.red
+                        : controller.profileCompleteness < 0.8
+                        ? Colors.orange
+                        : Colors.green,
+                  ),
+                  minHeight: 2,
+                ),
+              ),
+            ],
+          ),
+        ],
+      )),
+      trailing: IconButton(
+        onPressed: () => Get.to(() => const ProfileScreen()),
+        icon: const Icon(Iconsax.edit, color: TColors.white),
       ),
-      title: Text('Kim Gun Young', style: Theme.of(context).textTheme.headlineSmall!.apply(color: TColors.white)),
-      subtitle: Text('hoyaf798@gmail.com', style: Theme.of(context).textTheme.bodyMedium!.apply(color: TColors.white)),
-      trailing: IconButton(onPressed: () => Get.to(const ProfileScreen()), icon: const Icon(Iconsax.edit, color: TColors.white)),
+      onTap: () => Get.to(() => const ProfileScreen()),
     );
   }
 }
