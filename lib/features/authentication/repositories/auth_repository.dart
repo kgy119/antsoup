@@ -8,7 +8,7 @@ import '../../../utils/local_storage/storage_utility.dart';
 class AuthenticationRepository extends GetxController {
   static AuthenticationRepository get instance => Get.find();
 
-  // API 기본 URL - 실제 서버 주소로 변경 필요
+  // API 기본 URL
   static const String _baseUrl = 'http://antsoup.co.kr/api';
 
   final _localStorage = TLocalStorage();
