@@ -16,33 +16,68 @@ class TUserProfileTitle extends StatelessWidget {
 
     return ListTile(
       leading: Obx(() => TCircularImage(
-        image: controller.userProfile.value.profilePicture ?? TImages.user,
+        image: controller.userProfile.profilePicture ?? TImages.user,
         width: 50,
         height: 50,
         padding: 0,
-        isNetworkImage: controller.userProfile.value.profilePicture != null,
+        isNetworkImage: controller.userProfile.profilePicture != null,
       )),
       title: Obx(() => Text(
-        controller.userProfile.value.fullName.isEmpty
-            ? controller.userProfile.value.username
-            : controller.userProfile.value.fullName,
+        controller.userProfile.fullName.isEmpty
+            ? controller.userProfile.username
+            : controller.userProfile.fullName,
         style: Theme.of(context).textTheme.headlineSmall!.apply(color: TColors.white),
       )),
       subtitle: Obx(() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            controller.userProfile.value.email,
+            controller.userProfile.email,
             style: Theme.of(context).textTheme.bodyMedium!.apply(color: TColors.white),
           ),
-          if (controller.userProfile.value.phoneNumber != null) ...[
+          if (controller.userProfile.phoneNumber != null) ...[
             const SizedBox(height: 2),
             Text(
-              controller.userProfile.value.phoneNumber!,
+              controller.userProfile.phoneNumber!,
               style: Theme.of(context).textTheme.bodySmall!.apply(color: TColors.white),
             ),
           ],
           const SizedBox(height: 4),
+
+          /// Email and Phone Verification Status
+          Row(
+            children: [
+              if (!controller.userProfile.emailVerified) ...[
+                Icon(
+                  Iconsax.warning_2,
+                  size: 12,
+                  color: Colors.orange,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '이메일 미인증',
+                  style: Theme.of(context).textTheme.bodySmall!.apply(color: Colors.orange),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (controller.userProfile.emailVerified) ...[
+                Icon(
+                  Iconsax.verify,
+                  size: 12,
+                  color: Colors.green,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '인증됨',
+                  style: Theme.of(context).textTheme.bodySmall!.apply(color: Colors.green),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 4),
+
           /// Profile Completeness Indicator
           Row(
             children: [

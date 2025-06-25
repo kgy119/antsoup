@@ -15,7 +15,7 @@ class ChangeNameScreen extends StatelessWidget {
     return Scaffold(
       appBar: const TAppBar(
         showBackArrow: true,
-        title: Text('이름 변경'),
+        title: Text('프로필 변경'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(TSizes.defaultSpace),
@@ -26,32 +26,10 @@ class ChangeNameScreen extends StatelessWidget {
             children: [
               /// Instructions
               Text(
-                '실명을 사용하시면 친구들이 회원님을 알아보기 쉽습니다.',
+                '사용자명과 이메일, 전화번호를 변경할 수 있습니다.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: TSizes.spaceBtwSections),
-
-              /// First Name Field
-              TextFormField(
-                controller: controller.firstNameController,
-                validator: controller.validateFirstName,
-                decoration: const InputDecoration(
-                  labelText: '이름',
-                  prefixIcon: Icon(Iconsax.user),
-                ),
-              ),
-              const SizedBox(height: TSizes.spaceBtwInputFields),
-
-              /// Last Name Field
-              TextFormField(
-                controller: controller.lastNameController,
-                validator: controller.validateLastName,
-                decoration: const InputDecoration(
-                  labelText: '성',
-                  prefixIcon: Icon(Iconsax.user),
-                ),
-              ),
-              const SizedBox(height: TSizes.spaceBtwInputFields),
 
               /// Username Field
               TextFormField(
@@ -61,6 +39,19 @@ class ChangeNameScreen extends StatelessWidget {
                   labelText: '사용자명',
                   prefixIcon: Icon(Iconsax.user_edit),
                   hintText: '다른 사용자들이 볼 수 있는 고유한 이름',
+                ),
+              ),
+              const SizedBox(height: TSizes.spaceBtwInputFields),
+
+              /// Phone Number Field
+              TextFormField(
+                controller: controller.phoneController,
+                validator: controller.validatePhoneNumber,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: '전화번호 (선택사항)',
+                  prefixIcon: Icon(Iconsax.call),
+                  hintText: '010-1234-5678',
                 ),
               ),
               const SizedBox(height: TSizes.spaceBtwSections),

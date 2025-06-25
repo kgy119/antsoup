@@ -19,7 +19,7 @@ class AuthenticationController extends GetxController {
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController(); // 추가
+  final confirmPasswordController = TextEditingController();
   final phoneController = TextEditingController();
 
   // Form Keys
@@ -41,9 +41,16 @@ class AuthenticationController extends GetxController {
   // Privacy Policy & Terms
   final RxBool privacyPolicyAccepted = false.obs;
 
-  // 현재 사용자
-  UserModel get currentUser => _authRepository.currentUser;
-  bool get isLoggedIn => _authRepository.isLoggedIn;
+  // 현재 로그인된 사용자 (Observable)
+  final Rx<UserModel> _currentUser = UserModel.empty().obs;
+  UserModel get currentUser => _currentUser.value;
+
+  @override
+  void onReady() {
+    super.onReady();
+    // 앱 시작 시 저장된 사용자 정보 로드
+    _loadUserFromRepository();
+  }
 
   @override
   void onClose() {
@@ -54,6 +61,21 @@ class AuthenticationController extends GetxController {
     confirmPasswordController.dispose();
     phoneController.dispose();
     super.onClose();
+  }
+
+  /// Repository에서 사용자 정보 로드
+  void _loadUserFromRepository() {
+    _currentUser.value = _authRepository.currentUser;
+  }
+
+  /// 사용자 정보를 로컬 저장소에 저장 (외부에서 호출 가능)
+  Future<void> saveUserToStorage(UserModel user) async {
+    try {
+      await _authRepository.saveUserToStorage(user);
+      _currentUser.value = user;
+    } catch (e) {
+      throw TExceptions('사용자 정보 저장에 실패했습니다.');
+    }
   }
 
   /// 회원가입
@@ -91,6 +113,9 @@ class AuthenticationController extends GetxController {
         password: passwordController.text.trim(),
         phoneNumber: formattedPhone,
       );
+
+      // 로컬 사용자 정보 업데이트
+      _currentUser.value = user;
 
       // 성공 메시지
       TLoaders.successSnacBar(
@@ -131,6 +156,9 @@ class AuthenticationController extends GetxController {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
+      // 로컬 사용자 정보 업데이트
+      _currentUser.value = user;
 
       // 이메일 인증 확인
       if (!user.emailVerified) {
@@ -188,6 +216,9 @@ class AuthenticationController extends GetxController {
         googleToken: googleToken,
       );
 
+      // 로컬 사용자 정보 업데이트
+      _currentUser.value = user;
+
       // 성공 메시지
       TLoaders.successSnacBar(
         title: '구글 로그인 성공!',
@@ -233,6 +264,9 @@ class AuthenticationController extends GetxController {
         facebookToken: facebookToken,
       );
 
+      // 로컬 사용자 정보 업데이트
+      _currentUser.value = user;
+
       // 성공 메시지
       TLoaders.successSnacBar(
         title: '페이스북 로그인 성공!',
@@ -267,6 +301,9 @@ class AuthenticationController extends GetxController {
       // 로그아웃 처리
       await _authRepository.signOut();
 
+      // 로컬 사용자 정보 초기화
+      _currentUser.value = UserModel.empty();
+
       // 성공 메시지
       TLoaders.successSnacBar(
         title: '로그아웃 완료',
@@ -289,6 +326,7 @@ class AuthenticationController extends GetxController {
       );
 
       // 강제로 로그인 화면으로 이동
+      _currentUser.value = UserModel.empty();
       Get.offAll(() => const LoginScreen());
     } finally {
       isLoading.value = false;
@@ -366,10 +404,45 @@ class AuthenticationController extends GetxController {
     }
   }
 
+  /// 이메일 인증 확인
+  Future<void> verifyEmail(String verificationCode) async {
+    try {
+      isLoading.value = true;
+
+      await _authRepository.verifyEmail(verificationCode);
+
+      // 사용자 정보 업데이트
+      final updatedUser = _currentUser.value.copyWith(emailVerified: true);
+      await saveUserToStorage(updatedUser);
+
+      TLoaders.successSnacBar(
+        title: '이메일 인증 완료',
+        message: '이메일이 성공적으로 인증되었습니다.',
+      );
+
+    } catch (e) {
+      String errorMessage = '이메일 인증 중 오류가 발생했습니다.';
+      if (e is TExceptions) {
+        errorMessage = e.message;
+      }
+
+      TLoaders.errorSnacBar(
+        title: '이메일 인증 실패',
+        message: errorMessage,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   /// 이메일 인증 상태 확인
   Future<void> checkEmailVerificationStatus() async {
     try {
       final user = await _authRepository.getCurrentUser();
+
+      // 로컬 사용자 정보 업데이트
+      _currentUser.value = user;
+
       if (user.emailVerified) {
         TLoaders.successSnacBar(
           title: '이메일 인증 완료',
@@ -379,6 +452,17 @@ class AuthenticationController extends GetxController {
       }
     } catch (e) {
       // 에러는 무시 (주기적으로 체크하므로)
+    }
+  }
+
+  /// 현재 사용자 정보 새로고침 (서버에서 최신 정보 가져오기)
+  Future<void> refreshCurrentUser() async {
+    try {
+      final updatedUser = await _authRepository.getCurrentUser();
+      await saveUserToStorage(updatedUser);
+    } catch (e) {
+      print('사용자 정보 새로고침 실패: $e');
+      // 에러가 발생해도 앱 사용에 지장이 없도록 처리
     }
   }
 
@@ -418,8 +502,28 @@ class AuthenticationController extends GetxController {
     return TValidator.validatePhoneNumber(phoneNumber);
   }
 
-  /// 사용자명 유효성 검사 (TValidator 사용)
+  /// 사용자명 유효성 검사
   String? validateUsername(String? username) {
     return TValidator.validateUsername(username);
   }
+
+  /// 로그인 상태 확인
+  bool get isLoggedIn => _currentUser.value.isNotEmpty;
+
+  /// 이메일 인증 상태 확인
+  bool get isEmailVerified => _currentUser.value.emailVerified;
+
+  /// 토큰 가져오기
+  String? get authToken => _authRepository.authToken;
+
+  /// 서버 연결 테스트
+  Future<bool> testServerConnection() async {
+    return await _authRepository.testServerConnection();
+  }
+
+  /// 사용자 정보 스트림 (UI에서 사용자 정보 변경을 실시간으로 감지)
+  Stream<UserModel> get userStream => _currentUser.stream;
+
+  /// 사용자 정보 Observable (다른 컨트롤러에서 감시용)
+  Rx<UserModel> get userObservable => _currentUser;
 }

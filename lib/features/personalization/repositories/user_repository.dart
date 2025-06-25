@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:antsoup/features/authentication/models/user_model.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../models/user_profile_model.dart';
+
 import '../../../utils/exceptions/exceptions.dart';
 import '../../../utils/local_storage/storage_utility.dart';
 
@@ -15,8 +15,8 @@ class UserRepository extends GetxController {
 
   final _localStorage = TLocalStorage();
 
-  /// 사용자 프로필 정보 가져오기
-  Future<UserProfileModel> getUserProfile() async {
+  /// 현재 사용자 정보 가져오기 (서버에서 최신 정보)
+  Future<UserModel> getCurrentUser() async {
     try {
       final token = _localStorage.readData<String>('auth_token');
 
@@ -25,7 +25,7 @@ class UserRepository extends GetxController {
       }
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/user/profile.php'),
+        Uri.parse('$_baseUrl/auth/user.php'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -35,18 +35,22 @@ class UserRepository extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return UserProfileModel.fromJson(data['user']);
+        if (data['success'] == true && data['user'] != null) {
+          return UserModel.fromJson(data['user']);
+        } else {
+          throw TExceptions(data['message'] ?? '사용자 정보를 가져올 수 없습니다.');
+        }
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
     } catch (e) {
       if (e is TExceptions) rethrow;
-      throw TExceptions('프로필 정보를 가져오는 중 오류가 발생했습니다.');
+      throw TExceptions('사용자 정보를 가져오는 중 오류가 발생했습니다.');
     }
   }
 
   /// 사용자 프로필 업데이트
-  Future<UserProfileModel> updateUserProfile(Map<String, dynamic> userData) async {
+  Future<UserModel> updateUserProfile(Map<String, dynamic> userData) async {
     try {
       final token = _localStorage.readData<String>('auth_token');
 
@@ -55,7 +59,7 @@ class UserRepository extends GetxController {
       }
 
       final response = await http.put(
-        Uri.parse('$_baseUrl/user/profile.php'),
+        Uri.parse('$_baseUrl/auth/user.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -65,9 +69,14 @@ class UserRepository extends GetxController {
       );
 
       final data = jsonDecode(response.body);
-
+      print("response.statusCode : ${response.statusCode}");
       if (response.statusCode == 200) {
-        return UserProfileModel.fromJson(data['user']);
+        print("data['user'] : ${data['user']}");
+        if (data['success'] == true && data['user'] != null) {
+          return UserModel.fromJson(data['user']);
+        } else {
+          throw TExceptions(data['message'] ?? '프로필 업데이트에 실패했습니다.');
+        }
       } else {
         throw TExceptions(_parseErrorMessage(data));
       }
