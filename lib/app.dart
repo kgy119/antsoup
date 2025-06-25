@@ -1,4 +1,6 @@
 import 'package:antsoup/features/authentication/screens/onboarding/onboarding.dart';
+import 'package:antsoup/features/authentication/screens/login/login.dart';
+import 'package:antsoup/features/authentication/controllers.onboarding/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:antsoup/utils/constants/text_strings.dart';
@@ -17,8 +19,11 @@ class App extends StatelessWidget {
       theme: TAppTheme.lightTheme,
       darkTheme: TAppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      // initialBinding: GeneralBindings(),
-      home: const OnBoardingScreen(),
+      initialBinding: GeneralBindings(),
+      // 온보딩 완료 여부에 따라 시작 화면 결정
+      home: OnBoardingController.isOnBoardingComplete()
+          ? const LoginScreen()
+          : const OnBoardingScreen(),
     );
   }
 }
