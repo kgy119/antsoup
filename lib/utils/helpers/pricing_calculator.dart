@@ -1,4 +1,4 @@
-// import '../../features/shop/models/cart_model.dart';
+// import '../../features/stock/models/cart_model.dart';
 
 class TPricingCalculator {
 

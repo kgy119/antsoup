@@ -59,9 +59,6 @@ dependencies:
   cached_network_image: ^3.4.1
 
 
-
-
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -74,14 +71,9 @@ flutter:
   #LOCAL ASSETS
   assets:
     - assets/logos/
-    - assets/icons/brands/
+    - assets/icons/
     - assets/images/content/
-    - assets/images/banners/
-    - assets/images/reviews/
-    - assets/images/products/
-    - assets/icons/categories/
     - assets/images/animations/
-    - assets/icons/payment_methods/
     - assets/images/on_boarding_images/
 
   #LOCAL FONTS

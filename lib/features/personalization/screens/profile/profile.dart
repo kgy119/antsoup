@@ -44,31 +44,21 @@ class ProfileScreen extends StatelessWidget {
               const TSectionHeading(title: 'Profile Infomation', showActionButton: false),
               const SizedBox(height: TSizes.spaceBtwItems),
 
-              TProfileMenu(onPress: () {}, title: 'Name', value: 'Kim Gun Young'),
-              TProfileMenu(onPress: () {}, title: 'Username', value: 'Kim Gun Young'),
-
-              const SizedBox(height: TSizes.spaceBtwItems),
-              const Divider(),
-              const SizedBox(height: TSizes.spaceBtwItems),
-
-              /// Heading Personal Info
-              const TSectionHeading(title: 'Personal Infomation', showActionButton: false),
-              const SizedBox(height: TSizes.spaceBtwItems),
-
-              TProfileMenu(onPress: () {}, title: 'User ID', value: 'Kim Gun Young', icon: Iconsax.copy),
               TProfileMenu(onPress: () {}, title: 'E-mail', value: 'hoyaf798@gmail.com'),
-              TProfileMenu(onPress: () {}, title: 'Phone Number', value: '010-1234-5678'),
-              TProfileMenu(onPress: () {}, title: 'Gender', value: 'Male'),
-              TProfileMenu(onPress: () {}, title: 'Date of Birth', value: '1979.09.09'),
+              TProfileMenu(onPress: () {}, title: 'Name', value: 'Kim Gun Young'),
+              TProfileMenu(onPress: () {}, title: 'Phone', value: '010-1234-5678'),
+
               const Divider(),
               const SizedBox(height: TSizes.spaceBtwItems),
-              
-              Center(
-                child: TextButton(
-                  onPressed: (){},
-                  child: const Text('Close Account', style: TextStyle(color: Colors.red)),
-                ),
-              )
+
+              const SizedBox(height: TSizes.spaceBtwSections),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(onPressed: (){}, child: const Text('Edit Info')),
+              ),
+
+
+
             ],
           ),
         ),
