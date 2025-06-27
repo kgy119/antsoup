@@ -43,3 +43,32 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter/.gitignore에 추가할 내용
+
+# Firebase 설정 파일들 (민감한 정보 포함)
+/lib/firebase_options.dart
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/ios/firebase_app_id_file.json
+
+# Firebase 로컬 설정
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# 환경 변수 파일
+.env
+.env.local
+.env.*.local
+
+# API 키 및 비밀키
+/lib/utils/constants/api_constants.dart
+
+# 키스토어 파일들
+*.keystore
+*.jks
+key.properties
+
+# 기타 민감한 설정 파일들
+/android/app/src/main/res/values/strings.xml

@@ -1,5 +1,7 @@
-/// 서드파티 로그인 제공자 열거형
-enum AuthProvider {
+// lib/features/authentication/models/user_model.dart
+
+/// 서드파티 로그인 제공자 열거형 (Firebase와 충돌 방지를 위해 이름 변경)
+enum SocialAuthProvider {
   google,
   kakao,
   naver,
@@ -15,7 +17,7 @@ class UserModel {
   final String name; // 서드파티에서 가져온 닉네임
   final String? profilePicture; // 프로필 이미지 URL
   final String? phoneNumber; // 전화번호 (선택사항)
-  final AuthProvider authProvider; // 로그인한 제공자
+  final SocialAuthProvider authProvider; // 로그인한 제공자
   final bool isActive; // 계정 활성화 상태
   final DateTime createdAt; // 계정 생성일
   final DateTime updatedAt; // 마지막 업데이트일
@@ -44,7 +46,7 @@ class UserModel {
     uid: '',
     email: '',
     name: '',
-    authProvider: AuthProvider.google,
+    authProvider: SocialAuthProvider.google,
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );
@@ -54,7 +56,7 @@ class UserModel {
     required String uid,
     required String email,
     required String name,
-    required AuthProvider authProvider,
+    required SocialAuthProvider authProvider,
     String? profilePicture,
     String? phoneNumber,
   }) {
@@ -128,7 +130,7 @@ class UserModel {
     String? name,
     String? profilePicture,
     String? phoneNumber,
-    AuthProvider? authProvider,
+    SocialAuthProvider? authProvider,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -168,22 +170,22 @@ class UserModel {
   bool get hasPhoneNumber => phoneNumber?.isNotEmpty == true;
 
   /// 헬퍼 메서드들
-  static AuthProvider _parseAuthProvider(dynamic value) {
-    if (value == null) return AuthProvider.google;
+  static SocialAuthProvider _parseAuthProvider(dynamic value) {
+    if (value == null) return SocialAuthProvider.google;
 
     switch (value.toString().toLowerCase()) {
       case 'google':
-        return AuthProvider.google;
+        return SocialAuthProvider.google;
       case 'kakao':
-        return AuthProvider.kakao;
+        return SocialAuthProvider.kakao;
       case 'naver':
-        return AuthProvider.naver;
+        return SocialAuthProvider.naver;
       case 'facebook':
-        return AuthProvider.facebook;
+        return SocialAuthProvider.facebook;
       case 'apple':
-        return AuthProvider.apple;
+        return SocialAuthProvider.apple;
       default:
-        return AuthProvider.google;
+        return SocialAuthProvider.google;
     }
   }
 

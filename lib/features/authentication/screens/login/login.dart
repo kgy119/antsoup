@@ -3,9 +3,9 @@ import 'package:antsoup/utils/constants/image_strings.dart';
 import 'package:antsoup/utils/constants/sizes.dart';
 import 'package:antsoup/utils/constants/text_strings.dart';
 import 'package:antsoup/utils/helpers/helper_functions.dart';
-import 'package:antsoup/navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controllers/auth_controller.dart';
 import 'widgets/social_login_button.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -14,6 +14,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
+    final controller = Get.put(AuthController());
 
     return Scaffold(
       backgroundColor: dark ? TColors.black : TColors.white,
@@ -89,17 +90,19 @@ class LoginScreen extends StatelessWidget {
                       /// 서드파티 로그인 버튼들
                       Column(
                         children: [
-                          /// 구글 로그인
-                          SocialLoginButton(
-                            text: '구글로 계속하기',
-                            onPressed: () => _handleGoogleLogin(),
+                          /// 구글 로그인 - 실제 구현 연결
+                          Obx(() => SocialLoginButton(
+                            text: controller.isLoading.value ? '로그인 중...' : '구글로 계속하기',
+                            onPressed: controller.isLoading.value
+                                ? () {}
+                                : () => controller.signInWithGoogle(),
                             backgroundColor: dark ? TColors.darkContainer : const Color(0xFFF8F9FA),
                             textColor: dark ? TColors.white : TColors.dark,
                             borderColor: dark ? TColors.darkGrey : const Color(0xFFDADCE0),
-                          ),
+                          )),
                           const SizedBox(height: TSizes.spaceBtwItems),
 
-                          /// 카카오 로그인
+                          /// 카카오 로그인 - 임시 (다음 단계에서 구현)
                           SocialLoginButton(
                             text: '카카오로 계속하기',
                             onPressed: () => _handleKakaoLogin(),
@@ -108,7 +111,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: TSizes.spaceBtwItems),
 
-                          /// 네이버 로그인
+                          /// 네이버 로그인 - 임시 (다음 단계에서 구현)
                           SocialLoginButton(
                             text: '네이버로 계속하기',
                             onPressed: () => _handleNaverLogin(),
@@ -117,7 +120,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: TSizes.spaceBtwItems),
 
-                          /// 페이스북 로그인
+                          /// 페이스북 로그인 - 임시 (다음 단계에서 구현)
                           SocialLoginButton(
                             text: '페이스북으로 계속하기',
                             onPressed: () => _handleFacebookLogin(),
@@ -125,7 +128,7 @@ class LoginScreen extends StatelessWidget {
                             textColor: Colors.white,
                           ),
 
-                          /// 애플 로그인 (iOS에서만 표시)
+                          /// 애플 로그인 (iOS에서만 표시) - 임시 (다음 단계에서 구현)
                           if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                             const SizedBox(height: TSizes.spaceBtwItems),
                             SocialLoginButton(
@@ -184,34 +187,24 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  // 로그인 핸들러들 (임시로 NavigationMenu로 이동)
-  void _handleGoogleLogin() {
-    print('Google 로그인 시도');
-    // TODO: Google 로그인 구현
-    Get.offAll(() => const NavigationMenu());
-  }
-
+  // 임시 로그인 핸들러들 (다음 단계에서 실제 구현)
   void _handleKakaoLogin() {
-    print('카카오 로그인 시도');
+    print('카카오 로그인 시도 - 아직 구현되지 않음');
     // TODO: 카카오 로그인 구현
-    Get.offAll(() => const NavigationMenu());
   }
 
   void _handleNaverLogin() {
-    print('네이버 로그인 시도');
+    print('네이버 로그인 시도 - 아직 구현되지 않음');
     // TODO: 네이버 로그인 구현
-    Get.offAll(() => const NavigationMenu());
   }
 
   void _handleFacebookLogin() {
-    print('Facebook 로그인 시도');
+    print('Facebook 로그인 시도 - 아직 구현되지 않음');
     // TODO: Facebook 로그인 구현
-    Get.offAll(() => const NavigationMenu());
   }
 
   void _handleAppleLogin() {
-    print('Apple 로그인 시도');
+    print('Apple 로그인 시도 - 아직 구현되지 않음');
     // TODO: Apple 로그인 구현
-    Get.offAll(() => const NavigationMenu());
   }
 }
