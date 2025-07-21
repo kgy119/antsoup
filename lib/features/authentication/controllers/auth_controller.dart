@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../../navigation_menu.dart';
 import '../../../utils/loader/loaders.dart';
+import '../../messaging/services/fcm_service.dart';
 import '../models/user_model.dart';
 import '../screens/login/login.dart';
 import '../services/google_auth_service.dart';
@@ -60,6 +61,9 @@ class AuthController extends GetxController {
             // 로컬 저장소도 최신 정보로 업데이트
             await _authStorage.updateUserInfo(firestoreUser);
 
+            // FCM 서비스 초기화 (기존 로그인 복원 시)
+            await _initializeFCMService();
+
             print('Firestore에서 최신 사용자 정보 복원됨');
           } else {
             // Firestore에 정보가 없으면 저장된 정보 사용
@@ -93,6 +97,7 @@ class AuthController extends GetxController {
       isInitialized.value = true;
     }
   }
+
 
   /// Firebase 인증 상태 변화 처리
   void _handleAuthStateChange(User? firebaseUser) async {
@@ -169,7 +174,7 @@ class AuthController extends GetxController {
   }
 
   /// Google 로그인
-  Future<void> signInWithGoogle() async {
+  signInWithGoogle() async {
     if (isLoading.value) {
       print('이미 로그인 진행 중입니다.');
       return;
@@ -198,6 +203,9 @@ class AuthController extends GetxController {
             provider: SocialAuthProvider.google,
           );
 
+          // FCM 서비스 초기화 및 토큰 업데이트
+          await _initializeFCMService();
+
           print('Google 로그인 및 Firestore 동기화 완료!');
 
           TLoaders.successSnacBar(
@@ -222,6 +230,9 @@ class AuthController extends GetxController {
               user: retryUser,
               provider: SocialAuthProvider.google,
             );
+
+            // FCM 서비스 초기화 및 토큰 업데이트
+            await _initializeFCMService();
 
             TLoaders.successSnacBar(
               title: '로그인 성공!',
@@ -257,6 +268,59 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  /// FCM 서비스 초기화 (로그인 후 호출)
+  Future<void> _initializeFCMService() async {
+    try {
+      print('FCM 서비스 연동 시작...');
+
+      // FCM 서비스가 등록되어 있는지 확인
+      if (Get.isRegistered<FCMService>()) {
+        final fcmService = Get.find<FCMService>();
+
+        // FCM 토큰이 있으면 사용자 정보에 업데이트
+        if (fcmService.fcmToken.value.isNotEmpty) {
+          await updateFCMToken(fcmService.fcmToken.value);
+          print('기존 FCM 토큰 업데이트 완료');
+        } else {
+          // FCM 토큰이 없으면 잠시 후 다시 시도
+          await Future.delayed(const Duration(milliseconds: 2000));
+          if (fcmService.fcmToken.value.isNotEmpty) {
+            await updateFCMToken(fcmService.fcmToken.value);
+            print('지연된 FCM 토큰 업데이트 완료');
+          }
+        }
+
+        // 기본 토픽들 구독 (선택사항)
+        await _subscribeToDefaultTopics(fcmService);
+
+      } else {
+        print('FCM 서비스가 등록되지 않음');
+      }
+
+      print('FCM 서비스 연동 완료');
+    } catch (e) {
+      print('FCM 서비스 연동 실패: $e');
+      // FCM 연동 실패는 로그인 자체를 막지 않음
+    }
+  }
+
+  /// 기본 토픽 구독
+  Future<void> _subscribeToDefaultTopics(FCMService fcmService) async {
+    try {
+      // 모든 사용자용 공지사항 토픽
+      await fcmService.subscribeToTopic('announcements');
+
+      // 주식 관련 알림 토픽 (사용자가 관심있는 경우)
+      await fcmService.subscribeToTopic('stock_alerts');
+
+      print('기본 토픽 구독 완료');
+    } catch (e) {
+      print('기본 토픽 구독 실패: $e');
+    }
+  }
+
+
 
   /// 로그아웃
   Future<void> signOut() async {

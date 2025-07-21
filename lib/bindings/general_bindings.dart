@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../features/authentication/services/auth_storage_service.dart';
 import '../features/authentication/services/firestore_user_service.dart';
 import '../features/authentication/services/google_auth_service.dart';
+import '../features/messaging/services/fcm_service.dart';
 import '../utils/helpers/network_manager.dart';
 
 class GeneralBindings extends Bindings {
@@ -20,5 +21,8 @@ class GeneralBindings extends Bindings {
 
     // Google 인증 서비스
     Get.put(GoogleAuthService());
+
+    // FCM 서비스 추가
+    Get.put(FCMService());
   }
 }

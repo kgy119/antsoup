@@ -16,6 +16,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Kotlin DSL에서는 isCoreLibraryDesugaringEnabled 사용
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -31,6 +33,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // MultiDex 지원 (앱 크기가 클 때 필요)
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -44,4 +49,12 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Core library desugaring 의존성 추가
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // MultiDex 지원 (필요한 경우)
+    implementation("androidx.multidex:multidex:2.0.1")
 }

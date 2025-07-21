@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -10,7 +9,7 @@ void main() async {
   // Flutter 바인딩 초기화
   WidgetsFlutterBinding.ensureInitialized();
 
-  // GetStorage 초기화 (로그인 정보 저장용)
+  // GetStorage 초기화
   await GetStorage.init();
 
   // Firebase 초기화
