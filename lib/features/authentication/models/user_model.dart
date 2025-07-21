@@ -1,5 +1,3 @@
-// lib/features/authentication/models/user_model.dart
-
 /// 서드파티 로그인 제공자 열거형 (Firebase와 충돌 방지를 위해 이름 변경)
 enum SocialAuthProvider {
   google,
@@ -9,10 +7,9 @@ enum SocialAuthProvider {
   apple,
 }
 
-/// 사용자 모델 - 서드파티 로그인 전용
+/// 사용자 모델 - Firestore 전용
 class UserModel {
-  final int? id; // 서버 DB의 auto increment ID
-  final String uid; // 제공자에서 제공한 고유 ID
+  final String uid; // Firebase Authentication UID (Firestore 문서 ID로 사용)
   final String email;
   final String name; // 서드파티에서 가져온 닉네임
   final String? profilePicture; // 프로필 이미지 URL
@@ -26,7 +23,6 @@ class UserModel {
   final String? fcmToken; // Firebase Cloud Messaging 토큰
 
   const UserModel({
-    this.id,
     required this.uid,
     required this.email,
     required this.name,
@@ -75,56 +71,51 @@ class UserModel {
     );
   }
 
-  /// 서버 API용 JSON으로 변환
+  /// Firestore용 JSON으로 변환
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'uid': uid,
       'email': email,
       'name': name,
       'profile_picture': profilePicture,
       'phone_number': phoneNumber,
       'auth_provider': authProvider.name,
-      'is_active': isActive ? 1 : 0,
+      'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'last_login_at': lastLoginAt?.toIso8601String(),
-      'push_notifications': pushNotifications ? 1 : 0,
+      'push_notifications': pushNotifications,
       'fcm_token': fcmToken,
     };
   }
 
-  /// 서버 API용 등록 JSON (id 제외)
+  /// Firestore용 생성 JSON (생성 시 사용)
   Map<String, dynamic> toCreateJson() {
-    final json = toJson();
-    json.remove('id');
-    return json;
+    return toJson();
   }
 
-  /// 서버 응답 JSON에서 사용자 모델 생성
+  /// Firestore 문서에서 사용자 모델 생성
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
       uid: json['uid'] ?? '',
       email: json['email'] ?? '',
       name: json['name'] ?? '',
       profilePicture: json['profile_picture'],
       phoneNumber: json['phone_number'],
       authProvider: _parseAuthProvider(json['auth_provider']),
-      isActive: _parseBool(json['is_active']),
+      isActive: json['is_active'] ?? true,
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
       lastLoginAt: json['last_login_at'] != null
           ? _parseDateTime(json['last_login_at'])
           : null,
-      pushNotifications: _parseBool(json['push_notifications']),
+      pushNotifications: json['push_notifications'] ?? true,
       fcmToken: json['fcm_token'],
     );
   }
 
   /// 사용자 정보 업데이트를 위한 copyWith
   UserModel copyWith({
-    int? id,
     String? uid,
     String? email,
     String? name,
@@ -139,7 +130,6 @@ class UserModel {
     String? fcmToken,
   }) {
     return UserModel(
-      id: id ?? this.id,
       uid: uid ?? this.uid,
       email: email ?? this.email,
       name: name ?? this.name,
@@ -189,14 +179,6 @@ class UserModel {
     }
   }
 
-  static bool _parseBool(dynamic value) {
-    if (value == null) return false;
-    if (value is bool) return value;
-    if (value is int) return value == 1;
-    if (value is String) return value.toLowerCase() == 'true' || value == '1';
-    return false;
-  }
-
   static DateTime _parseDateTime(dynamic value) {
     if (value == null) return DateTime.now();
     if (value is DateTime) return value;
@@ -206,7 +188,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, uid: $uid, email: $email, name: $name, authProvider: $authProvider)';
+    return 'UserModel(uid: $uid, email: $email, name: $name, authProvider: $authProvider)';
   }
 
   @override
