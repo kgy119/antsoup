@@ -418,118 +418,6 @@ class FCMService extends GetxService {
     }
   }
 
-  /// 테스트 알림 보내기 (개발/테스트용)
-  Future<void> sendTestNotification() async {
-    if (!isFCMAvailable.value) {
-      TLoaders.warningSnacBar(
-        title: 'FCM 사용 불가',
-        message: 'FCM 서비스를 사용할 수 없습니다.',
-      );
-      return;
-    }
-
-    if (fcmToken.value.isEmpty) {
-      TLoaders.warningSnacBar(
-        title: '토큰 없음',
-        message: 'FCM 토큰이 없습니다.',
-      );
-      return;
-    }
-
-    try {
-      // 로컬 알림으로 테스트 (실제 FCM 서버 전송 없이)
-      await _showTestLocalNotification();
-
-      // 실제 FCM 서버를 통한 알림 전송 시도
-      await _sendTestNotificationToServer();
-
-      TLoaders.successSnacBar(
-        title: '테스트 알림',
-        message: '테스트 알림을 전송했습니다.',
-      );
-
-      print('테스트 알림 요청 완료 - FCM 토큰: ${fcmToken.value.substring(0, 20)}...');
-    } catch (e) {
-      print('테스트 알림 전송 실패: $e');
-      TLoaders.errorSnacBar(
-        title: '알림 전송 실패',
-        message: '테스트 알림 전송에 실패했습니다.',
-      );
-    }
-  }
-
-  /// 로컬 테스트 알림 표시
-  Future<void> _showTestLocalNotification() async {
-    try {
-      if (!isFCMAvailable.value) return;
-
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        'test_channel',
-        '테스트 알림',
-        channelDescription: '개미탕 테스트 알림 채널',
-        importance: Importance.high,
-        priority: Priority.high,
-        showWhen: true,
-        icon: '@mipmap/ic_launcher',
-      );
-
-      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
-
-      const NotificationDetails notificationDetails = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
-
-      await _localNotifications.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        '🐜 개미탕 테스트 알림',
-        '테스트 알림이 정상적으로 작동합니다! ${DateTime.now().toString().substring(11, 19)}',
-        notificationDetails,
-        payload: 'test_notification',
-      );
-
-      print('로컬 테스트 알림 표시 완료');
-    } catch (e) {
-      print('로컬 테스트 알림 표시 실패: $e');
-    }
-  }
-
-  /// 서버를 통한 테스트 알림 전송
-  Future<void> _sendTestNotificationToServer() async {
-    try {
-      // FCMHttpService를 통해 서버에 알림 전송 요청
-      if (Get.isRegistered<AuthController>()) {
-        final authController = Get.find<AuthController>();
-        final currentUser = authController.currentUser.value;
-
-        if (currentUser != null) {
-          // 서버 API 호출 (실제 구현 시)
-          print('서버 FCM 테스트 알림 요청 시작...');
-
-          // 실제 HTTP 요청은 나중에 구현
-          // final success = await FCMHttpService.sendTestNotification(
-          //   fcmToken: fcmToken.value,
-          //   title: '🐜 개미탕 서버 알림',
-          //   body: '서버에서 전송된 테스트 알림입니다.',
-          //   data: {
-          //     'type': 'test',
-          //     'timestamp': DateTime.now().toIso8601String(),
-          //     'user_id': currentUser.uid,
-          //   },
-          // );
-
-          print('서버 FCM 테스트 알림 요청 완료');
-        }
-      }
-    } catch (e) {
-      print('서버 테스트 알림 전송 실패: $e');
-    }
-  }
-
   /// 알림 권한 다시 요청
   Future<void> requestPermissionAgain() async {
     if (!isFCMAvailable.value) {
@@ -555,32 +443,6 @@ class FCMService extends GetxService {
     }
   }
 
-  /// FCM 토큰 새로고침
-  Future<void> refreshToken() async {
-    if (!isFCMAvailable.value) {
-      TLoaders.warningSnacBar(
-        title: 'FCM 사용 불가',
-        message: 'FCM 서비스를 사용할 수 없습니다.',
-      );
-      return;
-    }
-
-    try {
-      await _firebaseMessaging.deleteToken();
-      await _getFCMToken();
-
-      TLoaders.successSnacBar(
-        title: 'FCM 토큰',
-        message: 'FCM 토큰이 새로고침되었습니다.',
-      );
-    } catch (e) {
-      print('FCM 토큰 새로고침 실패: $e');
-      TLoaders.errorSnacBar(
-        title: '토큰 새로고침',
-        message: 'FCM 토큰 새로고침에 실패했습니다.',
-      );
-    }
-  }
 
   /// 토픽 구독
   Future<void> subscribeToTopic(String topic) async {
@@ -678,19 +540,5 @@ class FCMService extends GetxService {
     } catch (e) {
       print('토픽 구독 해제 실패: $e');
     }
-  }
-
-  /// 디버그 정보 출력
-  void printFCMInfo() {
-    print('=== FCM 정보 ===');
-    print('FCM 사용 가능: ${isFCMAvailable.value}');
-    print('FCM 토큰: ${fcmToken.value.isNotEmpty ? "${fcmToken.value.substring(0, 20)}..." : "없음"}');
-    print('알림 권한: ${isNotificationEnabled.value}');
-    print('================');
-  }
-
-  /// 로컬 테스트 알림만 표시 (public 메서드)
-  Future<void> showLocalTestNotification() async {
-    await _showTestLocalNotification();
   }
 }

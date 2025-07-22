@@ -39,42 +39,6 @@ class FCMHttpService {
     }
   }
 
-  /// 테스트 알림 요청
-  static Future<bool> sendTestNotification({
-    required String fcmToken,
-    required String title,
-    required String body,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/fcm/send-notification'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $tSecretAPIKey',
-        },
-        body: json.encode({
-          'fcm_token': fcmToken,
-          'title': title,
-          'body': body,
-          'data': data ?? {},
-          'type': 'test',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        print('테스트 알림 전송 성공');
-        return true;
-      } else {
-        print('테스트 알림 전송 실패: ${response.statusCode}');
-        return false;
-      }
-    } catch (e) {
-      print('테스트 알림 전송 에러: $e');
-      return false;
-    }
-  }
-
   /// 공지사항 알림 전송 (announcements 토픽)
   static Future<bool> sendAnnouncementNotification({
     required String title,
@@ -109,27 +73,6 @@ class FCMHttpService {
       }
     } catch (e) {
       print('공지사항 알림 전송 에러: $e');
-      return false;
-    }
-  }
-
-  /// FCM 토큰 유효성 검증
-  static Future<bool> validateFCMToken(String fcmToken) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/fcm/validate-token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $tSecretAPIKey',
-        },
-        body: json.encode({
-          'fcm_token': fcmToken,
-        }),
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('FCM 토큰 검증 에러: $e');
       return false;
     }
   }

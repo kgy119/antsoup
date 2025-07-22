@@ -58,79 +58,6 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: TSizes.spaceBtwSections),
 
-                  /// FCM 설정 섹션
-                  const TSectionHeading(title: 'FCM 설정 (테스트)', showActionButton: false),
-                  const SizedBox(height: TSizes.spaceBtwItems),
-
-                  // FCM 서비스가 등록되어 있는지 확인 후 표시
-                  if (Get.isRegistered<FCMService>())
-                    Obx(() {
-                      final fcmService = Get.find<FCMService>();
-                      return Column(
-                        children: [
-                          TSettingsMenuTile(
-                            icon: Iconsax.code,
-                            title: 'FCM 토큰 상태',
-                            subTitle: fcmService.fcmToken.value.isNotEmpty
-                                ? '토큰: ${fcmService.fcmToken.value.substring(0, 20)}...'
-                                : '토큰이 없습니다',
-                            trailing: Icon(
-                              fcmService.fcmToken.value.isNotEmpty ? Iconsax.tick_circle : Iconsax.close_circle,
-                              color: fcmService.fcmToken.value.isNotEmpty ? TColors.success : TColors.error,
-                            ),
-                          ),
-
-                          TSettingsMenuTile(
-                            icon: Iconsax.shield_tick,
-                            title: '알림 권한',
-                            subTitle: fcmService.isNotificationEnabled.value ? '허용됨' : '거부됨',
-                            trailing: Switch(
-                              value: fcmService.isNotificationEnabled.value,
-                              onChanged: (value) => fcmService.requestPermissionAgain(),
-                            ),
-                          ),
-
-                          TSettingsMenuTile(
-                            icon: Iconsax.send_1,
-                            title: '테스트 알림 보내기',
-                            subTitle: 'FCM 테스트 알림을 보냅니다',
-                            onTap: () => fcmService.sendTestNotification(),
-                          ),
-
-                          TSettingsMenuTile(
-                            icon: Iconsax.notification_1,
-                            title: '로컬 알림 테스트',
-                            subTitle: '로컬 알림만 테스트합니다',
-                            onTap: () => _showLocalTestNotification(fcmService),
-                          ),
-
-
-                          TSettingsMenuTile(
-                            icon: Iconsax.refresh,
-                            title: 'FCM 토큰 새로고침',
-                            subTitle: 'FCM 토큰을 새로 발급받습니다',
-                            onTap: () => fcmService.refreshToken(),
-                          ),
-
-                          TSettingsMenuTile(
-                            icon: Iconsax.information,
-                            title: 'FCM 디버그 정보',
-                            subTitle: '콘솔에 FCM 정보를 출력합니다',
-                            onTap: () => fcmService.printFCMInfo(),
-                          ),
-                        ],
-                      );
-                    })
-                  else
-                    TSettingsMenuTile(
-                      icon: Iconsax.warning_2,
-                      title: 'FCM 서비스 없음',
-                      subTitle: 'FCM 서비스가 초기화되지 않았습니다',
-                      trailing: const Icon(Iconsax.close_circle, color: TColors.error),
-                    ),
-
-                  const SizedBox(height: TSizes.spaceBtwSections),
-
                   /// 토픽 구독 관리 섹션
                   const TSectionHeading(title: '알림 설정', showActionButton: false),
                   const SizedBox(height: TSizes.spaceBtwItems),
@@ -255,15 +182,6 @@ class SettingsScreen extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  /// 로컬 테스트 알림 (SettingsScreen용)
-  void _showLocalTestNotification(FCMService fcmService) {
-    fcmService.showLocalTestNotification();
-    TLoaders.successSnacBar(
-      title: '로컬 알림',
-      message: '로컬 테스트 알림을 표시했습니다.',
     );
   }
 }
