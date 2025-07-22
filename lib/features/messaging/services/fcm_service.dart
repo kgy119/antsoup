@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/loader/loaders.dart';
+import '../../authentication/controllers/auth_controller.dart';
 
 /// FCM(Firebase Cloud Messaging) 관리 서비스
 class FCMService extends GetxService {
@@ -113,11 +114,34 @@ class FCMService extends GetxService {
     try {
       if (!isFCMAvailable.value) return;
 
-      // Android 초기화 설정
+      // Android 알림 채널 생성
+      const AndroidNotificationChannel defaultChannel = AndroidNotificationChannel(
+        'default_channel',
+        '기본 알림',
+        description: '개미탕 기본 알림 채널',
+        importance: Importance.high,
+      );
+
+      const AndroidNotificationChannel testChannel = AndroidNotificationChannel(
+        'test_channel',
+        '테스트 알림',
+        description: '개미탕 테스트 알림 채널',
+        importance: Importance.high,
+      );
+
+      // 채널 등록
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(defaultChannel);
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(testChannel);
+
+      // 초기화 설정
       const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      // iOS 초기화 설정
       const DarwinInitializationSettings initializationSettingsIOS =
       DarwinInitializationSettings(
         requestAlertPermission: true,
@@ -289,9 +313,17 @@ class FCMService extends GetxService {
   void _onNotificationTapped(NotificationResponse response) {
     print('알림 탭됨: ${response.payload}');
 
-    // 알림 데이터를 파싱하여 적절한 화면으로 이동
+    // 테스트 알림 처리
+    if (response.payload == 'test_notification') {
+      TLoaders.infoSnacBar(
+        title: '테스트 알림 탭됨',
+        message: '로컬 테스트 알림이 정상적으로 작동합니다!',
+      );
+      return;
+    }
+
+    // 기타 알림 데이터 처리
     if (response.payload != null) {
-      // payload를 파싱하여 화면 이동 로직 구현
       _navigateToScreen(response.payload!);
     }
   }
@@ -306,11 +338,8 @@ class FCMService extends GetxService {
     String? messageType = data['type'];
 
     switch (messageType) {
-      case 'chat':
-        _handleChatMessage(data);
-        break;
-      case 'stock_alert':
-        _handleStockAlert(data);
+      case 'announcement':
+        _handleAnnouncementMessage(data);
         break;
       case 'system':
         _handleSystemMessage(data);
@@ -319,6 +348,39 @@ class FCMService extends GetxService {
         _handleDefaultMessage(data);
     }
   }
+
+  /// 공지사항 메시지 처리
+  void _handleAnnouncementMessage(Map<String, dynamic> data) {
+    print('공지사항 메시지 처리');
+
+    // 공지사항 상세 화면으로 이동하거나 홈화면에 표시
+    TLoaders.infoSnacBar(
+      title: '📢 공지사항',
+      message: data['message'] ?? '새로운 공지사항이 있습니다.',
+    );
+
+    // 공지사항 화면으로 이동하는 로직 추가 가능
+    // Get.toNamed('/announcements');
+  }
+
+  /// 시스템 메시지 처리
+  void _handleSystemMessage(Map<String, dynamic> data) {
+    print('시스템 메시지 처리');
+
+    TLoaders.infoSnacBar(
+      title: '🔔 시스템 알림',
+      message: data['message'] ?? '시스템 알림이 있습니다.',
+    );
+  }
+
+  /// 기본 메시지 처리
+  void _handleDefaultMessage(Map<String, dynamic> data) {
+    print('기본 메시지 처리');
+
+    // 홈 화면으로 이동
+    // Get.offAllNamed('/home');
+  }
+
 
   /// 채팅 메시지 처리
   void _handleChatMessage(Map<String, dynamic> data) {
@@ -342,25 +404,6 @@ class FCMService extends GetxService {
       // 주식 상세 화면으로 이동하는 로직
       // Get.toNamed('/stock_detail', arguments: stockCode);
     }
-  }
-
-  /// 시스템 메시지 처리
-  void _handleSystemMessage(Map<String, dynamic> data) {
-    print('시스템 메시지 처리');
-
-    // 공지사항이나 설정 화면으로 이동
-    TLoaders.infoSnacBar(
-      title: '시스템 알림',
-      message: data['message'] ?? '새로운 공지사항이 있습니다.',
-    );
-  }
-
-  /// 기본 메시지 처리
-  void _handleDefaultMessage(Map<String, dynamic> data) {
-    print('기본 메시지 처리');
-
-    // 홈 화면으로 이동
-    // Get.offAllNamed('/home');
   }
 
   /// 화면 이동 처리
@@ -393,12 +436,98 @@ class FCMService extends GetxService {
       return;
     }
 
-    TLoaders.successSnacBar(
-      title: '테스트 알림',
-      message: '테스트 알림을 요청했습니다.',
-    );
+    try {
+      // 로컬 알림으로 테스트 (실제 FCM 서버 전송 없이)
+      await _showTestLocalNotification();
 
-    print('테스트 알림 요청 - FCM 토큰: ${fcmToken.value.substring(0, 20)}...');
+      // 실제 FCM 서버를 통한 알림 전송 시도
+      await _sendTestNotificationToServer();
+
+      TLoaders.successSnacBar(
+        title: '테스트 알림',
+        message: '테스트 알림을 전송했습니다.',
+      );
+
+      print('테스트 알림 요청 완료 - FCM 토큰: ${fcmToken.value.substring(0, 20)}...');
+    } catch (e) {
+      print('테스트 알림 전송 실패: $e');
+      TLoaders.errorSnacBar(
+        title: '알림 전송 실패',
+        message: '테스트 알림 전송에 실패했습니다.',
+      );
+    }
+  }
+
+  /// 로컬 테스트 알림 표시
+  Future<void> _showTestLocalNotification() async {
+    try {
+      if (!isFCMAvailable.value) return;
+
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'test_channel',
+        '테스트 알림',
+        channelDescription: '개미탕 테스트 알림 채널',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _localNotifications.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        '🐜 개미탕 테스트 알림',
+        '테스트 알림이 정상적으로 작동합니다! ${DateTime.now().toString().substring(11, 19)}',
+        notificationDetails,
+        payload: 'test_notification',
+      );
+
+      print('로컬 테스트 알림 표시 완료');
+    } catch (e) {
+      print('로컬 테스트 알림 표시 실패: $e');
+    }
+  }
+
+  /// 서버를 통한 테스트 알림 전송
+  Future<void> _sendTestNotificationToServer() async {
+    try {
+      // FCMHttpService를 통해 서버에 알림 전송 요청
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        final currentUser = authController.currentUser.value;
+
+        if (currentUser != null) {
+          // 서버 API 호출 (실제 구현 시)
+          print('서버 FCM 테스트 알림 요청 시작...');
+
+          // 실제 HTTP 요청은 나중에 구현
+          // final success = await FCMHttpService.sendTestNotification(
+          //   fcmToken: fcmToken.value,
+          //   title: '🐜 개미탕 서버 알림',
+          //   body: '서버에서 전송된 테스트 알림입니다.',
+          //   data: {
+          //     'type': 'test',
+          //     'timestamp': DateTime.now().toIso8601String(),
+          //     'user_id': currentUser.uid,
+          //   },
+          // );
+
+          print('서버 FCM 테스트 알림 요청 완료');
+        }
+      }
+    } catch (e) {
+      print('서버 테스트 알림 전송 실패: $e');
+    }
   }
 
   /// 알림 권한 다시 요청
@@ -519,6 +648,38 @@ class FCMService extends GetxService {
     }
   }
 
+  /// 토픽 구독 (스낵바 없이)
+  Future<void> subscribeToTopicSilently(String topic) async {
+    if (!isFCMAvailable.value) {
+      return;
+    }
+
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      print('토픽 구독 완료 (무음): $topic');
+    } on MissingPluginException catch (e) {
+      print('토픽 구독 플러그인 없음: $e');
+    } catch (e) {
+      print('토픽 구독 실패: $e');
+    }
+  }
+
+  /// 토픽 구독 해제 (스낵바 없이)
+  Future<void> unsubscribeFromTopicSilently(String topic) async {
+    if (!isFCMAvailable.value) {
+      return;
+    }
+
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      print('토픽 구독 해제 완료 (무음): $topic');
+    } on MissingPluginException catch (e) {
+      print('토픽 구독 해제 플러그인 없음: $e');
+    } catch (e) {
+      print('토픽 구독 해제 실패: $e');
+    }
+  }
+
   /// 디버그 정보 출력
   void printFCMInfo() {
     print('=== FCM 정보 ===');
@@ -526,5 +687,10 @@ class FCMService extends GetxService {
     print('FCM 토큰: ${fcmToken.value.isNotEmpty ? "${fcmToken.value.substring(0, 20)}..." : "없음"}');
     print('알림 권한: ${isNotificationEnabled.value}');
     print('================');
+  }
+
+  /// 로컬 테스트 알림만 표시 (public 메서드)
+  Future<void> showLocalTestNotification() async {
+    await _showTestLocalNotification();
   }
 }

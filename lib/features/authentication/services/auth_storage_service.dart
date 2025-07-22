@@ -282,6 +282,64 @@ class AuthStorageService extends GetxService {
     }
   }
 
+  /// 일반 데이터 저장
+  Future<void> saveData<T>(String key, T value) async {
+    try {
+      await _localStorage.saveData(key, value);
+    } catch (e) {
+      print('데이터 저장 실패: $e');
+    }
+  }
+
+  /// 일반 데이터 읽기
+  T? readData<T>(String key) {
+    try {
+      return _localStorage.readData<T>(key);
+    } catch (e) {
+      print('데이터 읽기 실패: $e');
+      return null;
+    }
+  }
+
+  /// 일반 데이터 삭제
+  Future<void> removeData(String key) async {
+    try {
+      await _localStorage.removeData(key);
+    } catch (e) {
+      print('데이터 삭제 실패: $e');
+    }
+  }
+
+  /// 토픽 구독 상태 저장
+  Future<void> saveTopicSubscription(String topic, bool isSubscribed) async {
+    try {
+      await _localStorage.saveData('topic_$topic', isSubscribed);
+      print('토픽 구독 상태 저장: $topic -> $isSubscribed');
+    } catch (e) {
+      print('토픽 구독 상태 저장 실패: $e');
+    }
+  }
+
+  /// 토픽 구독 상태 확인
+  bool isTopicSubscribed(String topic) {
+    try {
+      return _localStorage.readData<bool>('topic_$topic') ?? false;
+    } catch (e) {
+      print('토픽 구독 상태 확인 실패: $e');
+      return false;
+    }
+  }
+
+  /// 기본 토픽 구독 완료 여부 확인
+  bool hasCompletedDefaultSubscriptions() {
+    try {
+      return _localStorage.readData<bool>('has_subscribed_default_topics') ?? false;
+    } catch (e) {
+      print('기본 구독 상태 확인 실패: $e');
+      return false;
+    }
+  }
+
   /// 디버그 정보 출력
   void printStorageInfo() {
     print('=== 인증 저장소 정보 (Firestore용) ===');

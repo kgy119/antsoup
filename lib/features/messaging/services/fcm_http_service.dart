@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../utils/constants/api_constants.dart';
 
-/// FCM 관련 HTTP 통신 서비스
+/// FCM 관련 HTTP 통신 서비스 (announcements 토픽 전용)
 class FCMHttpService {
   static const String _baseUrl = 'http://antsoup.co.kr'; // 실제 서버 URL
 
@@ -75,97 +75,40 @@ class FCMHttpService {
     }
   }
 
-  /// 채팅 메시지 알림 전송
-  static Future<bool> sendChatNotification({
-    required String targetFCMToken,
-    required String senderName,
-    required String message,
-    required String chatRoomId,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/fcm/send-chat-notification'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $tSecretAPIKey',
-        },
-        body: json.encode({
-          'fcm_token': targetFCMToken,
-          'title': senderName,
-          'body': message,
-          'data': {
-            'type': 'chat',
-            'chat_room_id': chatRoomId,
-            'sender_name': senderName,
-          },
-        }),
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('채팅 알림 전송 에러: $e');
-      return false;
-    }
-  }
-
-  /// 주식 알림 전송
-  static Future<bool> sendStockAlert({
-    required List<String> fcmTokens,
-    required String stockName,
-    required String alertMessage,
-    required String stockCode,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/fcm/send-stock-alert'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $tSecretAPIKey',
-        },
-        body: json.encode({
-          'fcm_tokens': fcmTokens,
-          'title': '주식 알림: $stockName',
-          'body': alertMessage,
-          'data': {
-            'type': 'stock_alert',
-            'stock_code': stockCode,
-            'stock_name': stockName,
-          },
-        }),
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('주식 알림 전송 에러: $e');
-      return false;
-    }
-  }
-
-  /// 토픽별 알림 전송
-  static Future<bool> sendTopicNotification({
-    required String topic,
+  /// 공지사항 알림 전송 (announcements 토픽)
+  static Future<bool> sendAnnouncementNotification({
     required String title,
     required String body,
     Map<String, dynamic>? data,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/fcm/send-topic-notification'),
+        Uri.parse('$_baseUrl/api/fcm/send-announcement'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $tSecretAPIKey',
         },
         body: json.encode({
-          'topic': topic,
+          'topic': 'announcements',
           'title': title,
           'body': body,
-          'data': data ?? {},
+          'data': {
+            'type': 'announcement',
+            'timestamp': DateTime.now().toIso8601String(),
+            ...?data,
+          },
         }),
       );
 
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        print('공지사항 알림 전송 성공');
+        return true;
+      } else {
+        print('공지사항 알림 전송 실패: ${response.statusCode}');
+        return false;
+      }
     } catch (e) {
-      print('토픽 알림 전송 에러: $e');
+      print('공지사항 알림 전송 에러: $e');
       return false;
     }
   }
@@ -187,6 +130,40 @@ class FCMHttpService {
       return response.statusCode == 200;
     } catch (e) {
       print('FCM 토큰 검증 에러: $e');
+      return false;
+    }
+  }
+
+  /// 서버에서 전체 공지사항 전송 (관리자용)
+  static Future<bool> sendGlobalAnnouncement({
+    required String title,
+    required String message,
+    String? actionUrl,
+    Map<String, dynamic>? additionalData,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/fcm/send-global-announcement'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $tSecretAPIKey',
+        },
+        body: json.encode({
+          'title': title,
+          'body': message,
+          'topic': 'announcements',
+          'data': {
+            'type': 'announcement',
+            'action_url': actionUrl,
+            'timestamp': DateTime.now().toIso8601String(),
+            ...?additionalData,
+          },
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('전체 공지사항 전송 에러: $e');
       return false;
     }
   }

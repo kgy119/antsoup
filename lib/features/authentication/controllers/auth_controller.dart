@@ -105,49 +105,36 @@ class AuthController extends GetxController {
       if (firebaseUser != null) {
         print('Firebase 인증 상태 변화: 로그인됨 (${firebaseUser.uid})');
 
+        // 이미 처리 중인지 확인 (중복 방지)
+        if (isLoading.value) {
+          print('이미 사용자 정보 처리 중 - 중복 실행 방지');
+          return;
+        }
+
+        // 현재 저장된 사용자와 같은지 확인
+        if (currentUser.value?.uid == firebaseUser.uid) {
+          print('동일한 사용자 - 활동 시간만 업데이트');
+          await _authStorage.updateLastActive();
+          return;
+        }
+
         // Firestore에서 사용자 정보 가져오기
         final userModel = await _firestoreUserService.getUser(firebaseUser.uid);
 
         if (userModel != null) {
           currentUser.value = userModel;
 
-          // 새로운 로그인이면 저장
-          final savedUID = _authStorage.getSavedUID();
-          if (savedUID != userModel.uid) {
-            await _authStorage.saveLoginState(
-              user: userModel,
-              provider: SocialAuthProvider.google,
-            );
-            print('새로운 로그인 정보 저장됨');
-          } else {
-            // 기존 사용자면 활동 시간만 업데이트
-            await _authStorage.updateLastActive();
-            await _firestoreUserService.updateLastLogin(userModel.uid);
-          }
-        } else {
-          // Firestore에 정보가 없으면 Firebase Auth 정보로 생성
-          print('Firestore에 사용자 정보 없음 - 생성 중...');
-          final newUser = UserModel.fromSocialAuth(
-            uid: firebaseUser.uid,
-            email: firebaseUser.email ?? '',
-            name: firebaseUser.displayName ?? '',
-            authProvider: SocialAuthProvider.google,
-            profilePicture: firebaseUser.photoURL,
-            phoneNumber: firebaseUser.phoneNumber,
-          );
-
-          await _firestoreUserService.createUser(newUser);
-          currentUser.value = newUser;
-
+          // 저장된 사용자 정보 업데이트
           await _authStorage.saveLoginState(
-            user: newUser,
+            user: userModel,
             provider: SocialAuthProvider.google,
           );
+
+          print('기존 사용자 로그인 정보 업데이트 완료');
         }
       } else {
         print('Firebase 인증 상태 변화: 로그아웃됨');
-        // Firebase 사용자가 없는 경우
-        // 저장된 사용자 정보가 있다면 유지 (앱 재시작 시 Firebase 복원 전까지)
+        // 로그아웃 상태에서는 저장된 정보가 있으면 유지
         if (currentUser.value == null) {
           await _authStorage.clearLoginState();
         }
@@ -305,22 +292,38 @@ class AuthController extends GetxController {
     }
   }
 
-  /// 기본 토픽 구독
+  /// 기본 토픽 구독 (구독 완료 여부만 체크)
   Future<void> _subscribeToDefaultTopics(FCMService fcmService) async {
     try {
-      // 모든 사용자용 공지사항 토픽
-      await fcmService.subscribeToTopic('announcements');
+      // 구독 완료 여부만 확인
+      final hasSubscribedTopics = _authStorage.readData<bool>('has_subscribed_default_topics') ?? false;
 
-      // 주식 관련 알림 토픽 (사용자가 관심있는 경우)
-      await fcmService.subscribeToTopic('stock_alerts');
+      if (!hasSubscribedTopics) {
+        print('최초 공지사항 토픽 구독 시작');
 
-      print('기본 토픽 구독 완료');
+        // 공지사항 토픽 구독
+        await fcmService.subscribeToTopicSilently('announcements');
+        await _authStorage.saveTopicSubscription('announcements', true);
+
+        // 구독 완료 상태 저장 (다시는 실행되지 않음)
+        await _authStorage.saveData('has_subscribed_default_topics', true);
+
+        print('공지사항 토픽 구독 완료');
+
+        // 최초 1회만 스낵바 표시
+        TLoaders.successSnacBar(
+          title: '알림 설정',
+          message: '공지사항 알림이 활성화되었습니다.',
+          duration: 2,
+        );
+      } else {
+        print('공지사항 토픽 이미 구독됨');
+      }
+
     } catch (e) {
       print('기본 토픽 구독 실패: $e');
     }
   }
-
-
 
   /// 로그아웃
   Future<void> signOut() async {

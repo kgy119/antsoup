@@ -12,6 +12,8 @@ import '../../../../features/messaging/services/fcm_service.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/helpers/helper_functions.dart';
+import '../../../../utils/loader/loaders.dart';
+import '../../../authentication/services/auth_storage_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -96,6 +98,14 @@ class SettingsScreen extends StatelessWidget {
                           ),
 
                           TSettingsMenuTile(
+                            icon: Iconsax.notification_1,
+                            title: '로컬 알림 테스트',
+                            subTitle: '로컬 알림만 테스트합니다',
+                            onTap: () => _showLocalTestNotification(fcmService),
+                          ),
+
+
+                          TSettingsMenuTile(
                             icon: Iconsax.refresh,
                             title: 'FCM 토큰 새로고침',
                             subTitle: 'FCM 토큰을 새로 발급받습니다',
@@ -122,59 +132,34 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: TSizes.spaceBtwSections),
 
                   /// 토픽 구독 관리 섹션
-                  const TSectionHeading(title: '알림 구독 관리', showActionButton: false),
+                  const TSectionHeading(title: '알림 설정', showActionButton: false),
                   const SizedBox(height: TSizes.spaceBtwItems),
 
                   if (Get.isRegistered<FCMService>()) ...[
-                    TSettingsMenuTile(
-                      icon: Iconsax.speaker,
-                      title: '공지사항 알림',
-                      subTitle: '중요한 공지사항을 받아보세요',
-                      trailing: Switch(
-                        value: true, // 실제로는 구독 상태를 확인해야 함
-                        onChanged: (value) async {
-                          final fcmService = Get.find<FCMService>();
-                          if (value) {
-                            await fcmService.subscribeToTopic('announcements');
-                          } else {
-                            await fcmService.unsubscribeFromTopic('announcements');
-                          }
-                        },
-                      ),
-                    ),
+                    /// 공지사항 알림만 유지
+                    Builder(
+                      builder: (context) {
+                        final authStorage = Get.find<AuthStorageService>();
+                        final isSubscribed = authStorage.isTopicSubscribed('announcements');
 
-                    TSettingsMenuTile(
-                      icon: Iconsax.chart,
-                      title: '주식 알림',
-                      subTitle: '주식 관련 알림을 받아보세요',
-                      trailing: Switch(
-                        value: true, // 실제로는 구독 상태를 확인해야 함
-                        onChanged: (value) async {
-                          final fcmService = Get.find<FCMService>();
-                          if (value) {
-                            await fcmService.subscribeToTopic('stock_alerts');
-                          } else {
-                            await fcmService.unsubscribeFromTopic('stock_alerts');
-                          }
-                        },
-                      ),
-                    ),
-
-                    TSettingsMenuTile(
-                      icon: Iconsax.message,
-                      title: '채팅 알림',
-                      subTitle: '새로운 메시지 알림을 받아보세요',
-                      trailing: Switch(
-                        value: true, // 실제로는 구독 상태를 확인해야 함
-                        onChanged: (value) async {
-                          final fcmService = Get.find<FCMService>();
-                          if (value) {
-                            await fcmService.subscribeToTopic('chat_notifications');
-                          } else {
-                            await fcmService.unsubscribeFromTopic('chat_notifications');
-                          }
-                        },
-                      ),
+                        return TSettingsMenuTile(
+                          icon: Iconsax.speaker,
+                          title: '공지사항 알림',
+                          subTitle: '중요한 공지사항을 받아보세요',
+                          trailing: Switch(
+                            value: isSubscribed,
+                            onChanged: (value) async {
+                              final fcmService = Get.find<FCMService>();
+                              if (value) {
+                                await fcmService.subscribeToTopic('announcements');
+                              } else {
+                                await fcmService.unsubscribeFromTopic('announcements');
+                              }
+                              await authStorage.saveTopicSubscription('announcements', value);
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ],
 
@@ -270,6 +255,15 @@ class SettingsScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  /// 로컬 테스트 알림 (SettingsScreen용)
+  void _showLocalTestNotification(FCMService fcmService) {
+    fcmService.showLocalTestNotification();
+    TLoaders.successSnacBar(
+      title: '로컬 알림',
+      message: '로컬 테스트 알림을 표시했습니다.',
     );
   }
 }

@@ -83,7 +83,7 @@ class GoogleAuthService extends GetxService {
       final existingUser = await _firestoreUserService.getUser(firebaseUser.uid);
 
       if (existingUser == null) {
-        // 신규 사용자 - Firestore에 사용자 정보 생성
+        // 신규 사용자만 생성 (중복 생성 방지)
         print('신규 사용자 - Firestore에 정보 생성');
 
         final newUser = UserModel.fromSocialAuth(
@@ -99,39 +99,14 @@ class GoogleAuthService extends GetxService {
         print('신규 사용자 생성 완료');
 
       } else {
-        // 기존 사용자 - 마지막 로그인 시간 업데이트
+        // 기존 사용자 - 마지막 로그인 시간만 업데이트
         print('기존 사용자 - 로그인 시간 업데이트');
         await _firestoreUserService.updateLastLogin(firebaseUser.uid);
-
-        // 프로필 정보가 변경되었다면 업데이트
-        bool needsUpdate = false;
-        final updatedUser = existingUser.copyWith();
-
-        if (existingUser.email != firebaseUser.email && firebaseUser.email != null) {
-          updatedUser.copyWith(email: firebaseUser.email!);
-          needsUpdate = true;
-        }
-
-        if (existingUser.name != firebaseUser.displayName && firebaseUser.displayName != null) {
-          updatedUser.copyWith(name: firebaseUser.displayName!);
-          needsUpdate = true;
-        }
-
-        if (existingUser.profilePicture != firebaseUser.photoURL) {
-          updatedUser.copyWith(profilePicture: firebaseUser.photoURL);
-          needsUpdate = true;
-        }
-
-        if (needsUpdate) {
-          await _firestoreUserService.updateUser(updatedUser);
-          print('사용자 프로필 정보 업데이트 완료');
-        }
       }
 
     } catch (e) {
       print('Firestore 사용자 정보 처리 에러: $e');
-      // Firestore 저장 실패는 로그인 자체를 막지 않음
-      // 하지만 에러는 로그로 남김
+      // 에러 발생 시에도 로그인은 계속 진행
     }
   }
 
