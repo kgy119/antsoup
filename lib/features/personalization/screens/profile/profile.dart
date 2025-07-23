@@ -128,62 +128,34 @@ class ProfileScreen extends StatelessWidget {
                 }),
 
                 /// 전화번호 (수정 가능)
-                Obx(() => TProfileMenu(
-                  onPress: profileController.isUpdating.value
-                      ? null
-                      : () => profileController.showEditPhoneDialog(),
-                  title: 'Phone',
-                  value: user.phoneNumber?.isNotEmpty == true
-                      ? user.phoneNumber!
-                      : '전화번호를 등록해주세요',
-                  showIcon: true,
-                  icon: profileController.isUpdating.value
-                      ? Icons.hourglass_empty
-                      : Iconsax.edit,
-                )),
+                Obx(() {
+                  final user = authController.currentUser.value;
+                  return TProfileMenu(
+                    onPress: profileController.isUpdating.value
+                        ? null
+                        : () => profileController.showEditPhoneDialog(),
+                    title: 'Phone',
+                    value: user?.phoneNumber?.isNotEmpty == true
+                        ? user!.phoneNumber!
+                        : '전화번호를 등록해주세요',
+                    showIcon: true,
+                    icon: profileController.isUpdating.value
+                        ? Icons.hourglass_empty
+                        : Iconsax.edit,
+                  );
+                }),
 
-                const Divider(),
-                const SizedBox(height: TSizes.spaceBtwItems),
-
-                /// 추가 프로필 정보
-                const TSectionHeading(title: 'Account Information', showActionButton: false),
-                const SizedBox(height: TSizes.spaceBtwItems),
-
+                // 가입일 (Member Since를 Profile Information에 편입)
                 TProfileMenu(
                   onPress: () {},
-                  title: 'User ID',
-                  value: user.uid.length > 8
-                      ? '${user.uid.substring(0, 8)}...'
-                      : user.uid.isNotEmpty
-                      ? user.uid
-                      : 'Loading...', // 안전한 기본값 추가
-                  showIcon: false,
-                ),
-
-                TProfileMenu(
-                  onPress: () {},
-                  title: 'Login Provider',
-                  value: TAuthHelper.getAuthProviderText(user.authProvider),
-                  showIcon: false,
-                ),
-
-                TProfileMenu(
-                  onPress: () {},
-                  title: 'Member Since',
+                  title: 'Since',
                   value: TTimeHelper.formatDateKorean(user.createdAt),
                   showIcon: false,
                 ),
 
-                const SizedBox(height: TSizes.spaceBtwSections),
+                const Divider(),
+                const SizedBox(height: TSizes.spaceBtwItems),
 
-                /// Edit Info 버튼 (선택사항 - 다이얼로그가 있으니 제거해도 됨)
-                // SizedBox(
-                //   width: double.infinity,
-                //   child: OutlinedButton(
-                //     onPressed: () => _showEditProfileDialog(context, profileController),
-                //     child: const Text('Edit All Info'),
-                //   ),
-                // ),
               ],
             );
           }),

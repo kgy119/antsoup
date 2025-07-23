@@ -257,21 +257,35 @@ class ProfileController extends GetxController {
   /// 전화번호 수정 다이얼로그
   void showEditPhoneDialog() {
     final tempController = TextEditingController(text: phoneController.text);
+    final formKey = GlobalKey<FormState>();
 
     Get.dialog(
       AlertDialog(
         title: const Text('전화번호 수정'),
-        content: TextField(
-          controller: tempController,
-          decoration: const InputDecoration(
-            labelText: '전화번호',
-            border: OutlineInputBorder(),
-            hintText: '010-1234-5678',
-            prefixText: '+82 ',
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: tempController,
+            decoration: const InputDecoration(
+              labelText: '전화번호',
+              border: OutlineInputBorder(),
+              hintText: '010-1234-5678',
+            ),
+            keyboardType: TextInputType.phone,
+            autofocus: true,
+            maxLength: 13, // 010-1234-5678 형태
+            validator: _validatePhoneNumber,
+            onChanged: (value) {
+              // 자동 하이픈 추가
+              String formatted = _formatPhoneNumber(value);
+              if (formatted != value) {
+                tempController.value = TextEditingValue(
+                  text: formatted,
+                  selection: TextSelection.collapsed(offset: formatted.length),
+                );
+              }
+            },
           ),
-          keyboardType: TextInputType.phone,
-          autofocus: true,
-          maxLength: 15,
         ),
         actions: [
           TextButton(
@@ -282,9 +296,11 @@ class ProfileController extends GetxController {
             onPressed: isUpdating.value
                 ? null
                 : () async {
-              final newPhone = tempController.text.trim();
-              Get.back();
-              await _updateUserField('phoneNumber', newPhone);
+              if (formKey.currentState!.validate()) {
+                final newPhone = tempController.text.trim();
+                Get.back();
+                await _updateUserField('phoneNumber', newPhone);
+              }
             },
             child: isUpdating.value
                 ? const SizedBox(
@@ -297,6 +313,75 @@ class ProfileController extends GetxController {
         ],
       ),
     );
+  }
+
+  /// 전화번호 유효성 검사
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // 전화번호는 선택사항이므로 빈 값 허용
+    }
+
+    // 하이픈 제거 후 숫자만 확인
+    String digitsOnly = value.replaceAll('-', '');
+
+    // 숫자만 있는지 확인
+    if (!RegExp(r'^[0-9]+$').hasMatch(digitsOnly)) {
+      return '숫자만 입력해주세요';
+    }
+
+    // 한국 휴대폰 번호 형식 확인 (010, 011, 016, 017, 018, 019)
+    if (digitsOnly.length == 11) {
+      if (!RegExp(r'^01[0-9][0-9]{8}$').hasMatch(digitsOnly)) {
+        return '올바른 휴대폰 번호를 입력해주세요';
+      }
+    }
+    // 지역번호 포함 일반전화 (02-XXXX-XXXX, 0XX-XXX-XXXX, 0XX-XXXX-XXXX)
+    else if (digitsOnly.length >= 9 && digitsOnly.length <= 11) {
+      if (!RegExp(r'^0[2-9][0-9]{7,9}$').hasMatch(digitsOnly)) {
+        return '올바른 전화번호를 입력해주세요';
+      }
+    } else {
+      return '전화번호는 9-11자리 숫자여야 합니다';
+    }
+
+    return null;
+  }
+
+  /// 전화번호 자동 포맷팅 (하이픈 추가)
+  String _formatPhoneNumber(String value) {
+    // 숫자만 추출
+    String digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digitsOnly.isEmpty) return '';
+
+    // 길이에 따른 포맷팅
+    if (digitsOnly.length <= 3) {
+      return digitsOnly;
+    } else if (digitsOnly.length <= 7) {
+      return '${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3)}';
+    } else if (digitsOnly.length <= 11) {
+      if (digitsOnly.startsWith('02')) {
+        // 서울 지역번호 (02-XXXX-XXXX)
+        if (digitsOnly.length <= 6) {
+          return '${digitsOnly.substring(0, 2)}-${digitsOnly.substring(2)}';
+        } else {
+          return '${digitsOnly.substring(0, 2)}-${digitsOnly.substring(2, 6)}-${digitsOnly.substring(6)}';
+        }
+      } else if (digitsOnly.startsWith('01')) {
+        // 휴대폰 번호 (010-XXXX-XXXX)
+        return '${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3, 7)}-${digitsOnly.substring(7)}';
+      } else {
+        // 기타 지역번호 (0XX-XXX-XXXX 또는 0XX-XXXX-XXXX)
+        if (digitsOnly.length == 10) {
+          return '${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}';
+        } else {
+          return '${digitsOnly.substring(0, 3)}-${digitsOnly.substring(3, 7)}-${digitsOnly.substring(7)}';
+        }
+      }
+    }
+
+    // 11자리 초과 시 11자리까지만
+    return _formatPhoneNumber(digitsOnly.substring(0, 11));
   }
 
   /// 사용자 필드 업데이트
@@ -321,8 +406,10 @@ class ProfileController extends GetxController {
           return;
       }
 
-      // 1. 로컬 상태 즉시 업데이트 (UI 반영)
-      _authController.currentUser.value = updatedUser;
+      // 1. 강제로 상태 업데이트 (UI 즉시 반영)
+      _authController.currentUser.value = UserModel.empty(); // 빈 객체로 초기화
+      await Future.delayed(const Duration(milliseconds: 50)); // 잠시 대기
+      _authController.currentUser.value = updatedUser; // 새 데이터 설정
 
       // 2. Firestore와 로컬 저장소는 백그라운드에서 처리 (await 없이)
       _updateFirestoreInBackground(updatedUser);
