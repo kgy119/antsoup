@@ -68,7 +68,6 @@ class ProfileScreen extends StatelessWidget {
                         height: 120,
                         padding: 0,
                         fit: BoxFit.cover,
-                        enableCache: false,
                       )),
                       TextButton(
                           onPressed: () => profileController.changeProfileImage(),

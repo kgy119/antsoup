@@ -32,7 +32,6 @@ class TUserProfileTitle extends StatelessWidget {
           height: 50,
           padding: 0,
           fit: BoxFit.cover,
-          enableCache: false, // 실시간 업데이트를 위해 캐시 비활성화
         ),
         title: Text(
             userName,

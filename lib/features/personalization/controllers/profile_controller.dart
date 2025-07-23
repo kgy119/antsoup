@@ -40,11 +40,57 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// 프로필 이미지 변경
+  /// 프로필 이미지 변경 (대안 방법)
   Future<void> changeProfileImage() async {
     try {
-      // 이미지 선택 다이얼로그 표시
-      await _showImageSourceDialog();
+      // 직접 이미지 선택 다이얼로그 표시
+      showModalBottomSheet(
+        context: Get.context!,
+        builder: (BuildContext context) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '프로필 이미지 변경',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildImageSourceOption(
+                      icon: Icons.camera_alt,
+                      label: '카메라',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _pickImageFromSource(ImageSource.camera);
+                      },
+                    ),
+                    _buildImageSourceOption(
+                      icon: Icons.photo_library,
+                      label: '갤러리',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _pickImageFromSource(ImageSource.gallery);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('취소'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
     } catch (e) {
       print('이미지 선택 오류: $e');
       TLoaders.errorSnacBar(
@@ -54,7 +100,114 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// 이미지 소스 선택 다이얼로그
+  /// 통합된 이미지 선택 메서드
+  Future<void> _pickImageFromSource(ImageSource source) async {
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 70,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (pickedFile != null) {
+        await _uploadProfileImage(File(pickedFile.path));
+      }
+    } catch (e) {
+      print('이미지 선택 오류: $e');
+      TLoaders.errorSnacBar(
+        title: '이미지 선택 실패',
+        message: '이미지를 선택하는 중 오류가 발생했습니다.',
+      );
+    }
+  }
+
+  /// 이미지 소스 옵션 위젯
+  Widget _buildImageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 40, color: Colors.grey.shade600),
+            const SizedBox(height: 8),
+            Text(label),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 갤러리에서 이미지 선택
+  Future<void> _pickImageFromGallery() async {
+    try {
+      // 1. 먼저 다이얼로그 닫기
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+
+      // 2. 약간의 지연 후 이미지 선택
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (pickedFile != null) {
+        await _uploadProfileImage(File(pickedFile.path));
+      }
+    } catch (e) {
+      print('갤러리 이미지 선택 오류: $e');
+      TLoaders.errorSnacBar(
+        title: '이미지 선택 실패',
+        message: '갤러리에서 이미지를 선택하는 중 오류가 발생했습니다.',
+      );
+    }
+  }
+
+  /// 카메라에서 이미지 선택
+  Future<void> _pickImageFromCamera() async {
+    try {
+      // 1. 먼저 다이얼로그 닫기
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+
+      // 2. 약간의 지연 후 이미지 선택
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (pickedFile != null) {
+        await _uploadProfileImage(File(pickedFile.path));
+      }
+    } catch (e) {
+      print('카메라 이미지 촬영 오류: $e');
+      TLoaders.errorSnacBar(
+        title: '이미지 촬영 실패',
+        message: '카메라에서 이미지를 촬영하는 중 오류가 발생했습니다.',
+      );
+    }
+  }
+
+  /// 이미지 소스 선택 다이얼로그 (수정)
   Future<void> _showImageSourceDialog() async {
     Get.bottomSheet(
       Container(
@@ -83,12 +236,12 @@ class ProfileController extends GetxController {
                 _buildImageSourceOption(
                   icon: Icons.camera_alt,
                   label: '카메라',
-                  onTap: () => _pickImageFromCamera(),
+                  onTap: _pickImageFromCamera, // 직접 호출로 변경
                 ),
                 _buildImageSourceOption(
                   icon: Icons.photo_library,
                   label: '갤러리',
-                  onTap: () => _pickImageFromGallery(),
+                  onTap: _pickImageFromGallery, // 직접 호출로 변경
                 ),
               ],
             ),
@@ -96,67 +249,20 @@ class ProfileController extends GetxController {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => Get.back(),
+                onPressed: () {
+                  if (Get.isBottomSheetOpen == true) {
+                    Get.back();
+                  }
+                },
                 child: const Text('취소'),
               ),
             ),
           ],
         ),
       ),
+      isDismissible: true,
+      enableDrag: true,
     );
-  }
-
-  /// 이미지 소스 옵션 위젯
-  Widget _buildImageSourceOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: Colors.grey.shade600),
-            const SizedBox(height: 8),
-            Text(label),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 카메라에서 이미지 선택
-  Future<void> _pickImageFromCamera() async {
-    Get.back(); // 바텀시트 닫기
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 70,
-      maxWidth: 512,
-      maxHeight: 512,
-    );
-    if (pickedFile != null) {
-      await _uploadProfileImage(File(pickedFile.path));
-    }
-  }
-
-  /// 갤러리에서 이미지 선택
-  Future<void> _pickImageFromGallery() async {
-    Get.back(); // 바텀시트 닫기
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-      maxWidth: 512,
-      maxHeight: 512,
-    );
-    if (pickedFile != null) {
-      await _uploadProfileImage(File(pickedFile.path));
-    }
   }
 
   /// APM 서버에 이미지 업로드
