@@ -36,7 +36,7 @@ dependencies:
   carousel_slider: ^5.0.0
   flutter_rating_bar: ^4.0.1
   capped_progress_indicator: ^0.0.2
-  cached_network_image: ^3.4.0
+  cached_network_image: ^3.4.1
   flutter_launcher_icons: ^0.14.4
 
   # Firebase & Google Sign-In
@@ -48,6 +48,7 @@ dependencies:
   # FCM & Local Notifications (버전 수정)
   firebase_messaging: ^15.1.3
   flutter_local_notifications: ^18.0.1
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

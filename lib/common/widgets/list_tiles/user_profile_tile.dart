@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../utils/constants/colors.dart';
 import '../../../utils/constants/image_strings.dart';
+import '../../../features/authentication/controllers/auth_controller.dart';
 import '../images/t_circular_image.dart';
 
 class TUserProfileTitle extends StatelessWidget {
@@ -14,16 +15,38 @@ class TUserProfileTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: const TCircularImage(
-        image: TImages.user,
-        width: 50,
-        height: 50,
-        padding: 0,
-      ),
-      title: Text('Kim Gun Young', style: Theme.of(context).textTheme.headlineSmall!.apply(color: TColors.white)),
-      subtitle: Text('hoyaf798@gmail.com', style: Theme.of(context).textTheme.bodyMedium!.apply(color: TColors.white)),
-      trailing: IconButton(onPressed: () => Get.to(() => const ProfileScreen()), icon: const Icon(Iconsax.edit, color: TColors.white)),
-    );
+    final authController = Get.find<AuthController>();
+
+    return Obx(() {
+      final user = authController.currentUser.value;
+      final networkImage = user?.profilePicture ?? '';
+      final image = networkImage.isNotEmpty ? networkImage : TImages.user;
+      final userName = user?.name ?? '게스트';
+      final userEmail = user?.email ?? '로그인이 필요합니다';
+
+      return ListTile(
+        leading: TCircularImage(
+          image: image,
+          isNetworkImage: networkImage.isNotEmpty,
+          width: 50,
+          height: 50,
+          padding: 0,
+          fit: BoxFit.cover,
+          enableCache: false, // 실시간 업데이트를 위해 캐시 비활성화
+        ),
+        title: Text(
+            userName,
+            style: Theme.of(context).textTheme.headlineSmall!.apply(color: TColors.white)
+        ),
+        subtitle: Text(
+            userEmail,
+            style: Theme.of(context).textTheme.bodyMedium!.apply(color: TColors.white)
+        ),
+        trailing: IconButton(
+            onPressed: () => Get.to(() => const ProfileScreen()),
+            icon: const Icon(Iconsax.edit, color: TColors.white)
+        ),
+      );
+    });
   }
 }

@@ -1,6 +1,6 @@
 import 'package:antsoup/features/personalization/screens/settings/settings.dart';
-import 'package:antsoup/features/stock/screens/board/store.dart';
-import 'package:antsoup/features/stock/screens/message/wishlist.dart';
+import 'package:antsoup/features/stock/screens/board/board.dart';
+import 'package:antsoup/features/stock/screens/message/message.dart';
 import 'package:antsoup/utils/constants/colors.dart';
 import 'package:antsoup/utils/helpers/helper_functions.dart';
 import 'package:flutter/material.dart';

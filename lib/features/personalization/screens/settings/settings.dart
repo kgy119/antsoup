@@ -8,11 +8,10 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../../common/widgets/list_tiles/user_profile_tile.dart';
 import '../../../../features/authentication/controllers/auth_controller.dart';
-import '../../../../features/messaging/services/fcm_service.dart';
+import '../../../../features/notification/services/fcm_service.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/helpers/helper_functions.dart';
-import '../../../../utils/loader/loaders.dart';
 import '../../../authentication/services/auth_storage_service.dart';
 
 class SettingsScreen extends StatelessWidget {

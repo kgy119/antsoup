@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../../navigation_menu.dart';
 import '../../../utils/loader/loaders.dart';
-import '../../messaging/services/fcm_service.dart';
+import '../../notification/services/fcm_service.dart';
 import '../models/user_model.dart';
 import '../screens/login/login.dart';
 import '../services/google_auth_service.dart';
@@ -455,29 +455,20 @@ class AuthController extends GetxController {
   /// 사용자 정보 업데이트
   Future<void> updateUserInfo(UserModel updatedUser) async {
     try {
-      print('사용자 정보 업데이트 시작...');
+      print('Firestore 사용자 정보 업데이트 시작...');
 
       // Firestore 업데이트
       await _firestoreUserService.updateUser(updatedUser);
 
-      // 로컬 상태 업데이트
-      currentUser.value = updatedUser;
+      // 로컬 상태 재할당하지 않음 (이미 ProfileController에서 했으므로)
+      print('Firestore 업데이트만 완료');
 
       // 로컬 저장소 업데이트
       await _authStorage.updateUserInfo(updatedUser);
 
-      print('사용자 정보 업데이트 완료');
-
-      TLoaders.successSnacBar(
-        title: '프로필 업데이트',
-        message: '프로필이 성공적으로 업데이트되었습니다.',
-      );
+      print('Firestore 및 로컬 저장소 업데이트 완료');
     } catch (e) {
       print('사용자 정보 업데이트 에러: $e');
-      TLoaders.errorSnacBar(
-        title: '업데이트 실패',
-        message: '프로필 업데이트 중 오류가 발생했습니다.',
-      );
     }
   }
 
