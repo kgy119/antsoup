@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/theme/app_colors.dart';
@@ -75,6 +75,30 @@ class HomePage extends GetView<HomeController> {
                     child: SizedBox(
                       height: 200.h,
                       child: const LoadingWidget(message: '인기 종목을 불러오는 중...'),
+                    ),
+                  );
+                }
+
+                if (controller.errorMessage.value.isNotEmpty && controller.popularStocks.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 200.h,
+                      child: ErrorWidget(
+                        message: controller.errorMessage.value,
+                        onRetry: controller.loadInitialData,
+                      ),
+                    ),
+                  );
+                }
+
+                if (controller.popularStocks.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 200.h,
+                      child: const EmptyWidget(
+                        message: '인기 종목 데이터가 없습니다.',
+                        icon: Icons.trending_up_outlined,
+                      ),
                     ),
                   );
                 }

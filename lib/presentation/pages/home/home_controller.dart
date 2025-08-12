@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/models/market_index_model.dart';
+import '../../../data/providers/api_provider.dart';
+import '../../../data/providers/local_storage_provider.dart';
 
 class HomeController extends GetxController {
   final searchController = TextEditingController();
+  final _apiProvider = Get.find<ApiProvider>();
+  final _localStorage = Get.find<LocalStorageProvider>();
 
   final isLoading = false.obs;
   final isDarkMode = false.obs;
   final popularStocks = <StockModel>[].obs;
   final antInterestStocks = <StockModel>[].obs;
   final marketIndexes = <MarketIndexModel>[].obs;
+  final errorMessage = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
     loadInitialData();
     // 다크모드 상태 초기화
-    isDarkMode.value = Get.isDarkMode;
+    isDarkMode.value = _localStorage.getThemeMode();
   }
 
   @override
@@ -28,12 +33,19 @@ class HomeController extends GetxController {
 
   Future<void> loadInitialData() async {
     isLoading.value = true;
+    errorMessage.value = '';
+
     try {
       await Future.wait([
         loadPopularStocks(),
         loadAntInterestStocks(),
         loadMarketIndexes(),
       ]);
+    } catch (e) {
+      errorMessage.value = '데이터를 불러오는 중 오류가 발생했습니다: $e';
+      print('데이터 로딩 오류: $e');
+      // 오류 발생 시 더미 데이터로 폴백
+      _loadDummyData();
     } finally {
       isLoading.value = false;
     }
@@ -41,12 +53,59 @@ class HomeController extends GetxController {
 
   Future<void> refreshData() async {
     await loadInitialData();
+    Get.snackbar(
+      '새로고침 완료',
+      '최신 데이터를 불러왔습니다.',
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   Future<void> loadPopularStocks() async {
-    // TODO: API 연동 후 실제 데이터로 교체
-    await Future.delayed(const Duration(milliseconds: 500));
-    popularStocks.value = [
+    try {
+      final stocks = await _apiProvider.getPopularStocks();
+      popularStocks.value = stocks;
+    } catch (e) {
+      print('인기 종목 로딩 실패: $e');
+      // API 실패 시 더미 데이터 사용
+      popularStocks.value = _getDummyPopularStocks();
+      rethrow;
+    }
+  }
+
+  Future<void> loadAntInterestStocks() async {
+    try {
+      final stocks = await _apiProvider.getAntInterestStocks();
+      antInterestStocks.value = stocks;
+    } catch (e) {
+      print('개미 관심 종목 로딩 실패: $e');
+      // API 실패 시 더미 데이터 사용
+      antInterestStocks.value = _getDummyAntInterestStocks();
+      rethrow;
+    }
+  }
+
+  Future<void> loadMarketIndexes() async {
+    try {
+      final indexes = await _apiProvider.getMarketIndexes();
+      marketIndexes.value = indexes;
+    } catch (e) {
+      print('시장 지수 로딩 실패: $e');
+      // API 실패 시 더미 데이터 사용
+      marketIndexes.value = _getDummyMarketIndexes();
+      rethrow;
+    }
+  }
+
+  // 더미 데이터 생성 메서드들 (API 연동 전까지 사용)
+  void _loadDummyData() {
+    popularStocks.value = _getDummyPopularStocks();
+    antInterestStocks.value = _getDummyAntInterestStocks();
+    marketIndexes.value = _getDummyMarketIndexes();
+  }
+
+  List<StockModel> _getDummyPopularStocks() {
+    return [
       StockModel(
         code: '005930',
         name: '삼성전자',
@@ -71,10 +130,8 @@ class HomeController extends GetxController {
     ];
   }
 
-  Future<void> loadAntInterestStocks() async {
-    // TODO: API 연동 후 실제 데이터로 교체
-    await Future.delayed(const Duration(milliseconds: 500));
-    antInterestStocks.value = [
+  List<StockModel> _getDummyAntInterestStocks() {
+    return [
       StockModel(
         code: '096770',
         name: 'SK이노베이션',
@@ -99,10 +156,8 @@ class HomeController extends GetxController {
     ];
   }
 
-  Future<void> loadMarketIndexes() async {
-    // TODO: API 연동 후 실제 데이터로 교체
-    await Future.delayed(const Duration(milliseconds: 300));
-    marketIndexes.value = [
+  List<MarketIndexModel> _getDummyMarketIndexes() {
+    return [
       MarketIndexModel(
         name: '코스피',
         value: 2645.85,
@@ -125,9 +180,25 @@ class HomeController extends GetxController {
   }
 
   void onSearchChanged(String query) {
-    // TODO: 검색 기능 구현
+    // 최근 검색어에 추가
     if (query.length >= 2) {
-      // 검색 API 호출
+      _localStorage.addRecentSearch(query);
+      // TODO: 실제 검색 API 호출
+      // searchStocks(query);
+    }
+  }
+
+  Future<void> searchStocks(String keyword) async {
+    try {
+      // TODO: API Provider에 검색 메서드 추가 후 구현
+      // final results = await _apiProvider.searchStocks(keyword);
+      // 검색 결과 처리
+    } catch (e) {
+      Get.snackbar(
+        '검색 오류',
+        '검색 중 오류가 발생했습니다: $e',
+        snackPosition: SnackPosition.TOP,
+      );
     }
   }
 
@@ -142,6 +213,6 @@ class HomeController extends GetxController {
   void toggleTheme() {
     isDarkMode.value = !isDarkMode.value;
     Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
-    // TODO: 테마 설정을 로컬 저장소에 저장
+    _localStorage.saveThemeMode(isDarkMode.value);
   }
 }

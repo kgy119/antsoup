@@ -3,16 +3,27 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../controllers/main_navigation_controller.dart';
+import '../../pages/chart/chart_controller.dart';
+import '../../pages/community/community_controller.dart';
+import '../../pages/home/home_controller.dart';
 import '../../pages/home/home_page.dart';
+import '../../pages/home/home_binding.dart';
 import '../../pages/community/community_page.dart';
+import '../../pages/community/community_binding.dart';
 import '../../pages/chart/chart_page.dart';
+import '../../pages/chart/chart_binding.dart';
+import '../../pages/stock/stock_controller.dart';
 import '../../pages/stock/stock_page.dart';
+import '../../pages/stock/stock_binding.dart';
 
 class MainNavigation extends GetView<MainNavigationController> {
   const MainNavigation({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // 각 페이지의 바인딩을 미리 등록
+    _setupBindings();
+
     return Scaffold(
       body: Obx(() => IndexedStack(
         index: controller.currentIndex.value,
@@ -52,13 +63,24 @@ class MainNavigation extends GetView<MainNavigationController> {
             activeIcon: Icon(Icons.analytics),
             label: '차트',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: '프로필',
-          ),
         ],
       )),
     );
+  }
+
+  void _setupBindings() {
+    // 이미 등록되어 있는지 확인 후 등록
+    if (!Get.isRegistered<HomeController>()) {
+      HomeBinding().dependencies();
+    }
+    if (!Get.isRegistered<StockController>()) {
+      StockBinding().dependencies();
+    }
+    if (!Get.isRegistered<CommunityController>()) {
+      CommunityBinding().dependencies();
+    }
+    if (!Get.isRegistered<ChartController>()) {
+      ChartBinding().dependencies();
+    }
   }
 }
