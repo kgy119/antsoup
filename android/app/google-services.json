@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "631625130134",
+    "project_id": "antsoup-d1b04",
+    "storage_bucket": "antsoup-d1b04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631625130134:android:a03d1de3076ae32c2c22b7",
+        "android_client_info": {
+          "package_name": "kr.co.antsoup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-YX5v-HNzzeokO-cnEQCUHaUaCZKXFzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631625130134:android:caf2bec83795004b2c22b7",
+        "android_client_info": {
+          "package_name": "kr.co.antsoup.antsoup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-YX5v-HNzzeokO-cnEQCUHaUaCZKXFzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,227 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/text_styles.dart';
+import '../../widgets/common/common_widgets.dart';
+import '../../widgets/common/search_bar.dart';
+import 'home_controller.dart';
+
+class HomePage extends GetView<HomeController> {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: controller.refreshData,
+          child: CustomScrollView(
+            slivers: [
+              // 앱바
+              SliverAppBar(
+                floating: true,
+                pinned: false,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                elevation: 0,
+                flexibleSpace: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    children: [
+                      Text(
+                        '개미탕',
+                        style: AppTextStyles.headline4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined),
+                        onPressed: controller.goToNotifications,
+                      ),
+                      IconButton(
+                        icon: Obx(() => Icon(
+                          controller.isDarkMode.value
+                              ? Icons.light_mode
+                              : Icons.dark_mode,
+                        )),
+                        onPressed: controller.toggleTheme,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 검색바
+              SliverToBoxAdapter(
+                child: CustomSearchBar(
+                  hintText: '종목명, 종목코드를 검색하세요',
+                  onChanged: controller.onSearchChanged,
+                  controller: controller.searchController,
+                ),
+              ),
+
+              // 인기 종목 섹션
+              SliverToBoxAdapter(
+                child: _buildSectionHeader('🔥 인기 종목', '더보기'),
+              ),
+
+              // 인기 종목 리스트
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 200.h,
+                      child: const LoadingWidget(message: '인기 종목을 불러오는 중...'),
+                    ),
+                  );
+                }
+
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final stock = controller.popularStocks[index];
+                      return StockCard(
+                        stockName: stock.name,
+                        stockCode: stock.code,
+                        currentPrice: stock.formattedPrice,
+                        changeAmount: stock.formattedChangeAmount,
+                        changePercent: stock.formattedChangePercent,
+                        isUp: stock.isUp,
+                        onTap: () => controller.goToStockDetail(stock.code),
+                      );
+                    },
+                    childCount: controller.popularStocks.length,
+                  ),
+                );
+              }),
+
+              // 개미 관심 종목 섹션
+              SliverToBoxAdapter(
+                child: _buildSectionHeader('🐜 개미들의 관심종목', '더보기'),
+              ),
+
+              // 개미 관심 종목 리스트
+              Obx(() {
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final stock = controller.antInterestStocks[index];
+                      return StockCard(
+                        stockName: stock.name,
+                        stockCode: stock.code,
+                        currentPrice: stock.formattedPrice,
+                        changeAmount: stock.formattedChangeAmount,
+                        changePercent: stock.formattedChangePercent,
+                        isUp: stock.isUp,
+                        onTap: () => controller.goToStockDetail(stock.code),
+                      );
+                    },
+                    childCount: controller.antInterestStocks.length,
+                  ),
+                );
+              }),
+
+              // 시장 지수 섹션
+              SliverToBoxAdapter(
+                child: _buildSectionHeader('📊 시장 지수', ''),
+              ),
+
+              SliverToBoxAdapter(
+                child: _buildMarketIndexes(),
+              ),
+
+              // 하단 여백
+              SliverToBoxAdapter(
+                child: SizedBox(height: 20.h),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String actionText) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 12.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: AppTextStyles.headline6,
+          ),
+          if (actionText.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                // 더보기 액션
+              },
+              child: Text(
+                actionText,
+                style: AppTextStyles.bodyText2.copyWith(
+                  color: AppColors.grey600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketIndexes() {
+    return Container(
+      height: 120.h,
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Obx(() => Row(
+        children: controller.marketIndexes.map((index) {
+          return Expanded(
+            child: Card(
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Padding(
+                padding: EdgeInsets.all(12.w),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      index.name,
+                      style: AppTextStyles.caption,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      index.formattedValue,
+                      style: AppTextStyles.bodyText2.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          index.isUp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                          color: index.isUp ? AppColors.stockUp : AppColors.stockDown,
+                          size: 12.sp,
+                        ),
+                        Text(
+                          '${index.formattedChangePercent}%',
+                          style: AppTextStyles.caption.copyWith(
+                            color: index.isUp ? AppColors.stockUp : AppColors.stockDown,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      )),
+    );
+  }
+}
