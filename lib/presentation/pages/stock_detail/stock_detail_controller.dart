@@ -1,13 +1,19 @@
 import 'package:get/get.dart';
 import '../../../data/models/stock_detail_model.dart';
+import '../../../data/providers/api_provider.dart';
 
 class StockDetailController extends GetxController {
+  final ApiProvider _apiProvider = Get.find<ApiProvider>();
+
   final isLoading = true.obs;
   final stockDetail = Rx<StockDetailModel?>(null);
   final selectedPeriod = '1개월'.obs;
   final isWatchlisted = false.obs;
 
-  String get stockCode => Get.arguments?['stockCode'] ?? '';
+  String get stockCode {
+    final args = Get.arguments as Map<String, dynamic>?;
+    return args?['stockCode'] ?? '005930';
+  }
 
   final List<String> periods = ['1일', '1주', '1개월', '3개월', '6개월', '1년'];
 
@@ -20,44 +26,112 @@ class StockDetailController extends GetxController {
   Future<void> loadStockDetail() async {
     isLoading.value = true;
     try {
-      // TODO: API 연동 후 실제 데이터로 교체
-      await Future.delayed(const Duration(milliseconds: 800));
+      final detail = await _apiProvider.getStockDetail(
+        stockCode,
+        period: selectedPeriod.value,
+      );
+      stockDetail.value = detail;
+    } catch (e) {
+      print('종목 상세 정보 로딩 실패: $e');
 
+      // API 실패시 더미 데이터 사용
       stockDetail.value = _generateDummyStockDetail();
+
+      print('더미 데이터 생성 완료: ${stockDetail.value?.priceHistory.length}개 가격 데이터');
+      print('개미탕 지수 데이터: ${stockDetail.value?.antSoupIndex.length}개');
+
+      Get.snackbar(
+        '알림',
+        '서버 연결에 실패하여 더미 데이터를 표시합니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-  void changePeriod(String period) {
+  Future<void> changePeriod(String period) async {
+    if (selectedPeriod.value == period) return;
+
     selectedPeriod.value = period;
-    // TODO: 기간에 따른 차트 데이터 다시 로드
-    _updateChartData();
+
+    // 새로운 기간으로 데이터 다시 로드
+    isLoading.value = true;
+    try {
+      final detail = await _apiProvider.getStockDetail(
+        stockCode,
+        period: period,
+      );
+      stockDetail.value = detail;
+    } catch (e) {
+      print('차트 데이터 업데이트 실패: $e');
+
+      // API 실패시 더미 데이터 재생성
+      stockDetail.value = _generateDummyStockDetail();
+
+      Get.snackbar(
+        '알림',
+        '서버 연결에 실패하여 더미 데이터를 표시합니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void toggleWatchlist() {
     isWatchlisted.value = !isWatchlisted.value;
+
     // TODO: 관심종목 추가/제거 API 호출
+    if (isWatchlisted.value) {
+      addToWatchlist();
+    } else {
+      removeFromWatchlist();
+    }
   }
 
-  void _updateChartData() {
-    // 기간별 차트 데이터 업데이트
-    final current = stockDetail.value;
-    if (current != null) {
-      stockDetail.value = StockDetailModel(
-        code: current.code,
-        name: current.name,
-        currentPrice: current.currentPrice,
-        changeAmount: current.changeAmount,
-        changePercent: current.changePercent,
-        volume: current.volume,
-        marketCap: current.marketCap,
-        per: current.per,
-        pbr: current.pbr,
-        priceHistory: _generatePriceHistory(),
-        antSoupIndex: _generateAntSoupIndex(),
+  Future<void> addToWatchlist() async {
+    try {
+      // TODO: 디바이스 ID 가져오기
+      await _apiProvider.addToWatchlist(stockCode);
+      Get.snackbar(
+        '완료',
+        '관심종목에 추가되었습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('관심종목 추가 실패: $e');
+      isWatchlisted.value = false; // 실패시 원복
+      Get.snackbar(
+        '오류',
+        '관심종목 추가에 실패했습니다.',
+        snackPosition: SnackPosition.BOTTOM,
       );
     }
+  }
+
+  Future<void> removeFromWatchlist() async {
+    try {
+      // TODO: 디바이스 ID 가져오기
+      await _apiProvider.removeFromWatchlist(stockCode);
+      Get.snackbar(
+        '완료',
+        '관심종목에서 제거되었습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('관심종목 제거 실패: $e');
+      isWatchlisted.value = true; // 실패시 원복
+      Get.snackbar(
+        '오류',
+        '관심종목 제거에 실패했습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  void goBack() {
+    Get.back();
   }
 
   StockDetailModel _generateDummyStockDetail() {
@@ -114,7 +188,7 @@ class StockDetailController extends GetxController {
   List<ChartDataPoint> _generatePriceHistory() {
     final List<ChartDataPoint> data = [];
     final now = DateTime.now();
-    final basePrice = stockDetail.value?.currentPrice ?? 75000;
+    final basePrice = 75000.0; // 기본 가격
 
     // 기간에 따른 데이터 포인트 수 결정
     int dataPoints;
@@ -226,9 +300,5 @@ class StockDetailController extends GetxController {
     }
 
     return data;
-  }
-
-  void goBack() {
-    Get.back();
   }
 }

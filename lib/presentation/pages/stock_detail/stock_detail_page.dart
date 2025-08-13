@@ -179,7 +179,13 @@ class StockDetailPage extends GetView<StockDetailController> {
       ),
       child: Obx(() {
         final stock = controller.stockDetail.value;
-        if (stock == null) return const SizedBox.shrink();
+        if (stock == null) {
+          return const Center(child: Text('데이터를 불러오는 중...'));
+        }
+
+        if (stock.priceHistory.isEmpty) {
+          return const Center(child: Text('차트 데이터가 없습니다.'));
+        }
 
         return Column(
           children: [
@@ -195,14 +201,42 @@ class StockDetailPage extends GetView<StockDetailController> {
             SizedBox(height: 16.h),
             // 차트
             Expanded(
-              child: LineChart(
-                _buildLineChartData(stock),
-              ),
+              child: _buildSimpleChart(stock),
             ),
           ],
         );
       }),
     );
+  }
+
+  Widget _buildSimpleChart(stock) {
+    try {
+      return LineChart(
+        _buildLineChartData(stock),
+      );
+    } catch (e) {
+      print('차트 렌더링 오류: $e');
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.show_chart, size: 64.sp, color: AppColors.grey400),
+            SizedBox(height: 16.h),
+            Text('차트를 표시할 수 없습니다.', style: AppTextStyles.bodyText2),
+            SizedBox(height: 8.h),
+            Text('데이터: ${stock.priceHistory.length}개', style: AppTextStyles.caption),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () {
+                // 차트 다시 그리기 시도
+                controller.loadStockDetail();
+              },
+              child: const Text('다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildLegendItem(String label, Color color) {
@@ -223,27 +257,45 @@ class StockDetailPage extends GetView<StockDetailController> {
   }
 
   LineChartData _buildLineChartData(stock) {
-    final priceSpots = stock.priceHistory.asMap().entries.map<FlSpot>((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.value);
-    }).toList();
+    print('차트 데이터 생성 시작: ${stock.priceHistory.length}개 데이터');
 
-    final antSoupSpots = stock.antSoupIndex.asMap().entries.map<FlSpot>((entry) {
-      // 개미탕 지수를 주가 범위에 맞게 스케일링
-      final minPrice = stock.priceHistory.map((e) => e.value).reduce((a, b) => a < b ? a : b);
-      final maxPrice = stock.priceHistory.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-      final scaledValue = minPrice + (entry.value.value / 100) * (maxPrice - minPrice);
-      return FlSpot(entry.key.toDouble(), scaledValue);
-    }).toList();
+    if (stock.priceHistory.isEmpty) {
+      throw Exception('가격 데이터가 없습니다');
+    }
+
+    // 가격 데이터의 최소/최대값 계산
+    final prices = stock.priceHistory.map((e) => e.value).toList();
+    final minPrice = prices.reduce((a, b) => a < b ? a : b);
+    final maxPrice = prices.reduce((a, b) => a > b ? a : b);
+
+    print('가격 범위: $minPrice ~ $maxPrice');
+
+    final priceSpots = <FlSpot>[];
+    final antSoupSpots = <FlSpot>[];
+
+    for (int i = 0; i < stock.priceHistory.length; i++) {
+      final priceData = stock.priceHistory[i];
+      priceSpots.add(FlSpot(i.toDouble(), priceData.value));
+
+      // 개미탕 지수가 있는 경우에만 추가
+      if (i < stock.antSoupIndex.length) {
+        final antData = stock.antSoupIndex[i];
+        // 개미탕 지수를 가격 범위에 맞게 스케일링
+        final scaledValue = minPrice + (antData.value / 100) * (maxPrice - minPrice);
+        antSoupSpots.add(FlSpot(i.toDouble(), scaledValue));
+      }
+    }
+
+    print('FlSpot 생성 완료: 가격 ${priceSpots.length}개, 개미탕 ${antSoupSpots.length}개');
 
     return LineChartData(
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        horizontalInterval: null,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: AppColors.grey200,
-            strokeWidth: 1,
+            color: AppColors.grey200.withOpacity(0.5),
+            strokeWidth: 0.5,
           );
         },
       ),
@@ -254,11 +306,13 @@ class StockDetailPage extends GetView<StockDetailController> {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 60.w,
+            interval: (maxPrice - minPrice) / 4,
             getTitlesWidget: (value, meta) {
               return Text(
                 '${(value / 1000).toStringAsFixed(0)}K',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.grey600,
+                  fontSize: 10.sp,
                 ),
               );
             },
@@ -270,57 +324,52 @@ class StockDetailPage extends GetView<StockDetailController> {
             reservedSize: 30.h,
             interval: (priceSpots.length / 4).ceilToDouble(),
             getTitlesWidget: (value, meta) {
-              if (value.toInt() >= stock.priceHistory.length) return const SizedBox.shrink();
-
-              final date = stock.priceHistory[value.toInt()].date;
-              return Text(
-                '${date.month}/${date.day}',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.grey600,
-                ),
-              );
+              final index = value.toInt();
+              if (index >= 0 && index < stock.priceHistory.length) {
+                final date = stock.priceHistory[index].date;
+                return Text(
+                  '${date.month}/${date.day}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontSize: 10.sp,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
         ),
       ),
       borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: (priceSpots.length - 1).toDouble(),
+      minY: minPrice * 0.95,
+      maxY: maxPrice * 1.05,
       lineBarsData: [
         // 주가 라인
         LineChartBarData(
           spots: priceSpots,
           isCurved: true,
-          gradient: LinearGradient(colors: [
-            AppColors.lightPrimary,
-            AppColors.lightPrimary.withOpacity(0.8),
-          ]),
-          barWidth: 3.w,
+          color: AppColors.lightPrimary,
+          barWidth: 2.w,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: false),
           belowBarData: BarAreaData(
             show: true,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.lightPrimary.withOpacity(0.1),
-                AppColors.lightPrimary.withOpacity(0.05),
-              ],
-            ),
+            color: AppColors.lightPrimary.withOpacity(0.1),
           ),
         ),
-        // 개미탕 지수 라인
-        LineChartBarData(
-          spots: antSoupSpots,
-          isCurved: true,
-          gradient: LinearGradient(colors: [
-            AppColors.stockUp,
-            AppColors.stockUp.withOpacity(0.8),
-          ]),
-          barWidth: 2.w,
-          isStrokeCapRound: true,
-          dotData: const FlDotData(show: false),
-          dashArray: [5, 5], // 점선 스타일
-        ),
+        // 개미탕 지수 라인 (데이터가 있는 경우에만)
+        if (antSoupSpots.isNotEmpty)
+          LineChartBarData(
+            spots: antSoupSpots,
+            isCurved: true,
+            color: AppColors.stockUp,
+            barWidth: 1.5.w,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            dashArray: [5, 5],
+          ),
       ],
     );
   }

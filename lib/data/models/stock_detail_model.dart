@@ -28,6 +28,26 @@ class StockDetailModel {
     required this.antSoupIndex,
   });
 
+  factory StockDetailModel.fromJson(Map<String, dynamic> json) {
+    return StockDetailModel(
+      code: json['code'],
+      name: json['name'],
+      currentPrice: json['currentPrice'],
+      changeAmount: json['changeAmount'],
+      changePercent: (json['changePercent'] as num).toDouble(),
+      volume: json['volume'],
+      marketCap: json['marketCap'],
+      per: (json['per'] as num).toDouble(),
+      pbr: (json['pbr'] as num).toDouble(),
+      priceHistory: (json['priceHistory'] as List)
+          .map((item) => ChartDataPoint.fromJson(item))
+          .toList(),
+      antSoupIndex: (json['antSoupIndex'] as List)
+          .map((item) => ChartDataPoint.fromJson(item))
+          .toList(),
+    );
+  }
+
   // 헬퍼 메서드들
   bool get isUp => changeAmount > 0;
   bool get isDown => changeAmount < 0;
