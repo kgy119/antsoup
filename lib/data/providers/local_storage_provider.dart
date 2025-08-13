@@ -34,9 +34,10 @@ class LocalStorageProvider extends GetxService {
   }
 
   bool getThemeMode() {
-    return _prefs?.getBool('is_dark_mode') ?? false;
+    final result = _prefs?.getBool('is_dark_mode') ?? false;
+    print('LocalStorageProvider - getThemeMode(): $result');
+    return result;
   }
-
   // 디바이스 고유 ID 저장/불러오기 (익명 사용자 구분용)
   Future<void> saveDeviceId(String deviceId) async {
     await _prefs?.setString('device_id', deviceId);

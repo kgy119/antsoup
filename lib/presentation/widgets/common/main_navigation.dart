@@ -15,6 +15,7 @@ import '../../pages/chart/chart_binding.dart';
 import '../../pages/stock/stock_controller.dart';
 import '../../pages/stock/stock_page.dart';
 import '../../pages/stock/stock_binding.dart';
+import '../../../data/providers/local_storage_provider.dart';
 
 class MainNavigation extends GetView<MainNavigationController> {
   const MainNavigation({super.key});
@@ -23,6 +24,9 @@ class MainNavigation extends GetView<MainNavigationController> {
   Widget build(BuildContext context) {
     // 각 페이지의 바인딩을 미리 등록
     _setupBindings();
+
+    // 앱 시작시 저장된 테마 적용
+    _applyStoredTheme();
 
     return Scaffold(
       body: Obx(() => IndexedStack(
@@ -82,5 +86,24 @@ class MainNavigation extends GetView<MainNavigationController> {
     if (!Get.isRegistered<ChartController>()) {
       ChartBinding().dependencies();
     }
+  }
+
+  void _applyStoredTheme() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final localStorage = Get.find<LocalStorageProvider>();
+        final savedTheme = localStorage.getThemeMode();
+
+        // HomeController가 있다면 동기화
+        if (Get.isRegistered<HomeController>()) {
+          final homeController = Get.find<HomeController>();
+          homeController.isDarkMode.value = savedTheme;
+        }
+
+        print('MainNavigation - 저장된 테마 적용: ${savedTheme ? "다크모드" : "라이트모드"}');
+      } catch (e) {
+        print('MainNavigation - 테마 적용 실패: $e');
+      }
+    });
   }
 }

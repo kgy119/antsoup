@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
@@ -20,7 +21,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
 
   // Hive 초기화
   await Hive.initFlutter();
@@ -57,20 +57,39 @@ class AntSoupApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return GetMaterialApp(
-          title: '개미탕',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          initialBinding: InitialBinding(),
-          home: const MainNavigationWrapper(),
-          getPages: AppPages.routes,
-          locale: const Locale('ko', 'KR'),
-          fallbackLocale: const Locale('ko', 'KR'),
+        return FutureBuilder<ThemeMode>(
+          future: _getInitialThemeMode(),
+          builder: (context, snapshot) {
+            final themeMode = snapshot.data ?? ThemeMode.system;
+
+            return GetMaterialApp(
+              title: '개미탕',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeMode,
+              initialBinding: InitialBinding(),
+              home: const MainNavigationWrapper(),
+              getPages: AppPages.routes,
+              locale: const Locale('ko', 'KR'),
+              fallbackLocale: const Locale('ko', 'KR'),
+            );
+          },
         );
       },
     );
+  }
+
+  // 저장된 테마 모드 불러오기
+  Future<ThemeMode> _getInitialThemeMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isDarkMode = prefs.getBool('is_dark_mode') ?? false;
+      return isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    } catch (e) {
+      print('테마 설정 로드 실패: $e');
+      return ThemeMode.system;
+    }
   }
 }
 

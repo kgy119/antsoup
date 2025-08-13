@@ -4,13 +4,16 @@ import 'package:get/get.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/models/market_index_model.dart';
 import '../../../data/providers/api_provider.dart';
+import '../../../data/providers/local_storage_provider.dart';
 
 class HomeController extends GetxController {
   final searchController = TextEditingController();
   final ApiProvider _apiProvider = Get.find<ApiProvider>();
+  final LocalStorageProvider _localStorage = Get.find<LocalStorageProvider>();
+  final searchFocusNode = FocusNode();
 
   final isLoading = false.obs;
-  final isDarkMode = false.obs;
+  final isDarkMode = false.obs; // 이 변수를 유지하고 동기화
   final hasError = false.obs;
   final errorMessage = ''.obs;
   final popularStocks = <StockModel>[].obs;
@@ -20,15 +23,53 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // 저장된 테마 설정을 즉시 로드
+    _initializeThemeSettings();
+
+    // 빌드 완료 후에 테마 적용
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyThemeSettings();
+    });
+
     loadInitialData();
-    // 다크모드 상태 초기화
-    isDarkMode.value = Get.isDarkMode;
   }
 
   @override
   void onClose() {
     searchController.dispose();
+    searchFocusNode.dispose();
     super.onClose();
+  }
+
+  // 검색창 포커스 해제 메서드 추가
+  void unfocusSearch() {
+    searchFocusNode.unfocus();
+  }
+
+  // 저장된 테마 설정 즉시 로드 (UI 반영용)
+  void _initializeThemeSettings() {
+    try {
+      final savedThemeMode = _localStorage.getThemeMode();
+      isDarkMode.value = savedThemeMode;
+      print('HomeController 테마 설정 로드: ${savedThemeMode ? "다크모드" : "라이트모드"}');
+    } catch (e) {
+      print('테마 설정 로드 실패: $e');
+      isDarkMode.value = false; // 기본값으로 설정
+    }
+  }
+
+  // 저장된 테마 설정을 GetX에 적용
+  void _applyThemeSettings() {
+    try {
+      // 현재 테마와 다른 경우에만 변경
+      final currentThemeMode = Get.isDarkMode;
+      if (currentThemeMode != isDarkMode.value) {
+        Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
+        print('테마 적용 완료: ${isDarkMode.value ? "다크모드" : "라이트모드"}');
+      }
+    } catch (e) {
+      print('테마 적용 실패: $e');
+    }
   }
 
   Future<void> loadInitialData() async {
@@ -69,7 +110,6 @@ class HomeController extends GetxController {
       popularStocks.value = stocks;
     } catch (e) {
       print('인기 종목 로딩 실패: $e');
-      // 실패시 빈 리스트 유지하고 에러 표시하지 않음
       popularStocks.value = [];
     }
   }
@@ -80,7 +120,6 @@ class HomeController extends GetxController {
       antInterestStocks.value = stocks;
     } catch (e) {
       print('개미 관심 종목 로딩 실패: $e');
-      // 실패시 빈 리스트 유지하고 에러 표시하지 않음
       antInterestStocks.value = [];
     }
   }
@@ -91,15 +130,12 @@ class HomeController extends GetxController {
       marketIndexes.value = indexes;
     } catch (e) {
       print('시장 지수 로딩 실패: $e');
-      // 실패시 빈 리스트 유지하고 에러 표시하지 않음
       marketIndexes.value = [];
     }
   }
 
   void onSearchChanged(String query) {
-    // TODO: 검색 기능 구현
     if (query.length >= 2) {
-      // 검색 API 호출
       searchStocks(query);
     }
   }
@@ -107,7 +143,6 @@ class HomeController extends GetxController {
   Future<void> searchStocks(String keyword) async {
     try {
       final results = await _apiProvider.searchStocks(keyword);
-      // TODO: 검색 결과 처리
       print('검색 결과: ${results.length}개');
     } catch (e) {
       print('검색 실패: $e');
@@ -122,9 +157,22 @@ class HomeController extends GetxController {
     Get.toNamed('/notification');
   }
 
-  void toggleTheme() {
+  Future<void> toggleTheme() async {
     isDarkMode.value = !isDarkMode.value;
+
+    // 테마 변경 적용
     Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
-    // TODO: 테마 설정을 로컬 저장소에 저장
+
+    // 로컬 저장소에 테마 설정 저장
+    await _localStorage.saveThemeMode(isDarkMode.value);
+
+    print('테마 설정 저장 완료: ${isDarkMode.value ? "다크모드" : "라이트모드"}');
+
+    // Get.snackbar(
+    //   '테마 변경',
+    //   '${isDarkMode.value ? "다크" : "라이트"} 모드로 변경되었습니다.',
+    //   snackPosition: SnackPosition.BOTTOM,
+    //   duration: const Duration(seconds: 1),
+    // );
   }
 }

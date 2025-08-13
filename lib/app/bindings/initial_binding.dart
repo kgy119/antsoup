@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/utils/device_utils.dart';
 import '../../data/providers/api_provider.dart';
 import '../../data/providers/local_storage_provider.dart';
+import '../../presentation/controllers/theme_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -16,16 +18,25 @@ class InitialBinding extends Bindings {
     Get.put<LocalStorageProvider>(LocalStorageProvider(), permanent: true);
     Get.put<ApiProvider>(ApiProvider(), permanent: true);
 
-    // 디바이스 ID 초기화
-    _initializeDeviceId();
+    // 테마 컨트롤러 초기화
+    Get.put<ThemeController>(ThemeController(), permanent: true);
+
+    // 초기 설정들 비동기 처리
+    _initializeSettings();
   }
 
-  Future<void> _initializeDeviceId() async {
+  Future<void> _initializeSettings() async {
     try {
+      // 디바이스 ID 초기화
       await DeviceUtils.getOrCreateDeviceId();
       print('디바이스 ID 초기화 완료');
+
+      // 테마 설정 적용
+      final themeController = Get.find<ThemeController>();
+      themeController.applyInitialTheme();
+
     } catch (e) {
-      print('디바이스 ID 초기화 실패: $e');
+      print('초기 설정 실패: $e');
     }
   }
 }
