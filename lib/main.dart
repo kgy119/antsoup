@@ -17,16 +17,30 @@ import 'presentation/controllers/main_navigation_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase 초기화
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    // Firebase 초기화
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase 초기화 성공');
+  } catch (e) {
+    print('Firebase 초기화 실패: $e');
+    // Firebase 초기화 실패시에도 앱은 계속 실행
+  }
+
 
   // Hive 초기화
   await Hive.initFlutter();
 
-  // 알림 서비스 초기화
-  await NotificationService.initialize();
+  try {
+    // 알림 서비스 초기화
+    await NotificationService.initialize();
+    print('알림 서비스 초기화 성공');
+  } catch (e) {
+    print('알림 서비스 초기화 실패: $e');
+    // 알림 서비스 초기화 실패시에도 앱은 계속 실행
+  }
+
 
   // 상태바 스타일 설정
   SystemChrome.setSystemUIOverlayStyle(

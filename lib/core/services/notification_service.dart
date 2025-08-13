@@ -9,35 +9,39 @@ class NotificationService extends GetxService {
   FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    // 권한 요청
-    await _requestPermissions();
+    try {
+      // 권한 요청
+      await _requestPermissions();
 
-    // 로컬 알림 초기화
-    await _initializeLocalNotifications();
+      // 로컬 알림 초기화
+      await _initializeLocalNotifications();
 
-    // Firebase 알림 초기화
-    await _initializeFirebaseNotifications();
+      // Firebase 알림 초기화
+      await _initializeFirebaseNotifications();
+    } catch (e) {
+      print('알림 서비스 초기화 실패: $e');
+      // 초기화 실패시에도 앱이 계속 실행되도록 함
+    }
   }
 
   static Future<void> _requestPermissions() async {
-    // 알림 권한 요청
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    try {
+      // 알림 권한 요청
+      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('사용자가 알림 권한을 허용했습니다.');
-    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-      print('사용자가 임시 알림 권한을 허용했습니다.');
-    } else {
-      print('사용자가 알림 권한을 거부했습니다.');
+      print('알림 권한 상태: ${settings.authorizationStatus}');
+    } catch (e) {
+      print('알림 권한 요청 실패: $e');
     }
+
   }
 
   static Future<void> _initializeLocalNotifications() async {
