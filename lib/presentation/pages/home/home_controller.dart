@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../app/routes/app_routes.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/models/market_index_model.dart';
 import '../../../data/providers/api_provider.dart';
@@ -203,7 +204,7 @@ class HomeController extends GetxController {
   }
 
   void goToStockDetail(String stockCode) {
-    Get.toNamed('/stock/detail', arguments: {'stockCode': stockCode});
+    Get.toNamed(Routes.stockDetail, arguments: {'stockCode': stockCode});
   }
 
   void goToNotifications() {
