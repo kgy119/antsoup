@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'antsoup-d1b04.firebasestorage.app',
     iosBundleId: 'kr.co.antsoup',
   );
+
 }
