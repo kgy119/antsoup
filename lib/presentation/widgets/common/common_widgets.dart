@@ -43,7 +43,7 @@ class StockCard extends StatelessWidget {
   final String stockCode;
   final String currentPrice;
   final String priceChangePercent;
-  final String asiWithChange;        // currentAsi -> asiWithChange로 변경
+  final String asiWithChange;
   final bool isUp;
   final bool isAsiUp;
   final VoidCallback? onTap;
@@ -54,7 +54,7 @@ class StockCard extends StatelessWidget {
     required this.stockCode,
     required this.currentPrice,
     required this.priceChangePercent,
-    required this.asiWithChange,      // currentAsi -> asiWithChange로 변경
+    required this.asiWithChange,
     required this.isUp,
     required this.isAsiUp,
     this.onTap,
@@ -62,25 +62,11 @@ class StockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 종가 변화율 색상 결정
-    Color priceColor;
-    if (priceChangePercent.contains('0.00%') || priceChangePercent == '0.00%') {
-      priceColor = Colors.black;
-    } else if (isUp) {
-      priceColor = AppColors.stockUp;
-    } else {
-      priceColor = AppColors.stockDown;
-    }
+    // 가격 변화에 따른 색상 결정 (종가와 변화율 모두 동일한 색상 사용)
+    final priceColor = _getPriceChangeColor(priceChangePercent, isUp);
 
-    // ASI 색상 결정
-    Color asiColor;
-    if (asiWithChange.contains('0.00%')) {
-      asiColor = Colors.black;           // 변화없으면 검은색
-    } else if (isAsiUp) {
-      asiColor = AppColors.stockUp;      // 상승시 빨간색
-    } else {
-      asiColor = AppColors.stockDown;    // 하락시 파란색
-    }
+    // ASI 변화에 따른 색상 결정
+    final asiColor = _getAsiChangeColor(asiWithChange, isAsiUp);
 
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -112,26 +98,26 @@ class StockCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // 현재가
+                  // 현재가 (변화율과 동일한 색상)
                   Text(
                     currentPrice,
                     style: AppTextStyles.stockPrice.copyWith(
-                      color: Colors.black,
+                      color: priceColor, // 변화율과 동일한 색상
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  // 가격 변화율
+                  // 가격 변화율 (현재가와 동일한 색상)
                   Text(
                     priceChangePercent,
                     style: AppTextStyles.stockChange.copyWith(
-                      color: priceColor,
+                      color: priceColor, // 현재가와 동일한 색상
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   SizedBox(height: 4.h),
                   // ASI 값과 변화율
                   Text(
-                    asiWithChange,  // 예: "170 +5.20%" 또는 "51 -2.15%"
+                    asiWithChange,
                     style: AppTextStyles.caption.copyWith(
                       color: asiColor,
                       fontWeight: FontWeight.w500,
@@ -145,6 +131,41 @@ class StockCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getPriceChangeColor(String changePercent, bool isUp) {
+    // 0.00%인지 확인
+    if (changePercent == '0.00%' || changePercent == '+0.00%' || changePercent == '-0.00%') {
+      return Colors.black;
+    }
+
+    // +나 -가 포함되어 있는지 확인
+    if (changePercent.startsWith('+')) {
+      return AppColors.stockUp; // 빨간색
+    } else if (changePercent.startsWith('-')) {
+      return AppColors.stockDown; // 파란색
+    }
+
+    // 백업: isUp 플래그 사용
+    return isUp ? AppColors.stockUp : AppColors.stockDown;
+  }
+
+  // ASI 변화율 색상 결정
+  Color _getAsiChangeColor(String asiString, bool isAsiUp) {
+    // 0.00%가 포함되어 있는지 확인
+    if (asiString.contains('0.00%') || asiString.contains('+0.00%') || asiString.contains('-0.00%')) {
+      return Colors.black;
+    }
+
+    // +나 -가 포함되어 있는지 확인
+    if (asiString.contains('+')) {
+      return AppColors.stockUp; // 빨간색
+    } else if (asiString.contains('-')) {
+      return AppColors.stockDown; // 파란색
+    }
+
+    // 백업: isAsiUp 플래그 사용
+    return isAsiUp ? AppColors.stockUp : AppColors.stockDown;
   }
 }
 
