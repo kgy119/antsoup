@@ -7,7 +7,7 @@ import '../models/stock_detail_model.dart';
 class ApiProvider extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
 
-  // 인기 종목 조회 (ASI 값이 가장 큰 5개)
+  /// 인기 종목 조회 (ASI 값이 가장 큰 5개)
   Future<List<StockModel>> getPopularStocks() async {
     try {
       final response = await _apiService.get('/stocks/popular.php');
@@ -17,17 +17,19 @@ class ApiProvider extends GetxService {
         return data.map((json) => StockModel.fromJson({
           'code': json['code'],
           'name': json['name'],
-          'current_price': json['close_price'],
-          'change_amount': json['change_amount'] ?? 0,
-          'change_percent': json['change_percent'] ?? 0.0,
-          'asi': json['asi'], // ASI 값 추가
+          'close_price': json['close_price'],              // ✅ close_price 그대로 사용
+          'price_change': json['price_change'],            // ✅ price_change 그대로 사용
+          'price_change_percent': json['price_change_percent'], // ✅ price_change_percent 그대로 사용
+          'current_asi': json['current_asi'],              // ✅ current_asi 그대로 사용
+          'asi_change': json['asi_change'],                // ✅ asi_change 그대로 사용
+          'asi_change_percent': json['asi_change_percent'], // ✅ asi_change_percent 그대로 사용
         })).toList();
       } else {
         throw Exception(response.data['message'] ?? '인기 종목 조회 실패');
       }
     } catch (e) {
       print('인기 종목 조회 실패: $e');
-      return []; // 빈 리스트 반환
+      return [];
     }
   }
 
@@ -41,16 +43,62 @@ class ApiProvider extends GetxService {
         return data.map((json) => StockModel.fromJson({
           'code': json['code'],
           'name': json['name'],
-          'current_price': json['close_price'] ?? 0,
-          'change_amount': json['change_amount'] ?? 0,
-          'change_percent': json['change_percent'] ?? 0.0,
+          'close_price': json['close_price'],              // ✅ close_price 그대로 사용
+          'price_change': json['price_change'],            // ✅ price_change 그대로 사용
+          'price_change_percent': json['price_change_percent'], // ✅ price_change_percent 그대로 사용
+          'current_asi': json['current_asi'],              // ✅ current_asi 그대로 사용
+          'asi_change': json['asi_change'],                // ✅ asi_change 그대로 사용
+          'asi_change_percent': json['asi_change_percent'], // ✅ asi_change_percent 그대로 사용
         })).toList();
       } else {
         throw Exception(response.data['message'] ?? '개미 관심 종목 조회 실패');
       }
     } catch (e) {
       print('개미 관심 종목 조회 실패: $e');
-      return []; // 빈 리스트 반환
+      return [];
+    }
+  }
+
+// 관심종목 조회에서도 동일하게 수정
+  Future<Map<String, dynamic>> getWatchlistStocks(List<String> stockCodes) async {
+    try {
+      final response = await _apiService.post(
+        '/stocks/watchlist.php',
+        data: {'stock_codes': stockCodes},
+      );
+
+      if (response.data['success'] == true) {
+        final data = response.data['data'];
+        final List<StockModel> stocks = (data['stocks'] as List)
+            .map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          'asi_change': json['asi_change'],
+          'asi_change_percent': json['asi_change_percent'],
+        }))
+            .toList();
+
+        return {
+          'stocks': stocks,
+          'not_found': data['not_found'] ?? [],
+          'total_requested': data['total_requested'] ?? 0,
+          'total_found': data['total_found'] ?? 0,
+        };
+      } else {
+        throw Exception(response.data['message'] ?? '관심종목 조회 실패');
+      }
+    } catch (e) {
+      print('관심종목 조회 실패: $e');
+      return {
+        'stocks': <StockModel>[],
+        'not_found': stockCodes,
+        'total_requested': stockCodes.length,
+        'total_found': 0,
+      };
     }
   }
 

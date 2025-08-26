@@ -1,8 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:intl/intl.dart';
 
-// part 'stock_model.g.dart';
-
 @JsonSerializable()
 class StockModel {
   final String code;
@@ -10,6 +8,9 @@ class StockModel {
   final int currentPrice;
   final int changeAmount;
   final double changePercent;
+  final int currentAsi;
+  final int asiChangeAmount;
+  final double asiChangePercent;
 
   StockModel({
     required this.code,
@@ -17,20 +18,24 @@ class StockModel {
     required this.currentPrice,
     required this.changeAmount,
     required this.changePercent,
+    required this.currentAsi,
+    required this.asiChangeAmount,
+    required this.asiChangePercent,
   });
 
-  // 실제 fromJson 구현 (서버 응답 구조에 맞게 조정)
   factory StockModel.fromJson(Map<String, dynamic> json) {
     return StockModel(
-      code: json['code'] ?? json['stock_code'] ?? '',
-      name: json['name'] ?? json['stock_name'] ?? '',
-      currentPrice: _parseToInt(json['current_price'] ?? json['price'] ?? 0),
-      changeAmount: _parseToInt(json['change_amount'] ?? json['change'] ?? 0),
-      changePercent: _parseToDouble(json['change_percent'] ?? json['change_rate'] ?? 0.0),
+      code: json['code'] ?? '',
+      name: json['name'] ?? '',
+      currentPrice: _parseToInt(json['close_price'] ?? 0),
+      changeAmount: _parseToInt(json['price_change'] ?? 0),
+      changePercent: _parseToDouble(json['price_change_percent'] ?? 0.0),
+      currentAsi: _parseToInt(json['current_asi'] ?? 0),
+      asiChangeAmount: _parseToInt(json['asi_change'] ?? 0),
+      asiChangePercent: _parseToDouble(json['asi_change_percent'] ?? 0.0),
     );
   }
 
-  // JSON으로 변환
   Map<String, dynamic> toJson() {
     return {
       'code': code,
@@ -38,10 +43,12 @@ class StockModel {
       'current_price': currentPrice,
       'change_amount': changeAmount,
       'change_percent': changePercent,
+      'current_asi': currentAsi,
+      'asi_change_amount': asiChangeAmount,
+      'asi_change_percent': asiChangePercent,
     };
   }
 
-  // 숫자 파싱 헬퍼 메서드
   static int _parseToInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();
@@ -61,6 +68,11 @@ class StockModel {
   bool get isDown => changeAmount < 0;
   bool get isFlat => changeAmount == 0;
 
+  bool get isAsiUp => asiChangeAmount > 0;
+  bool get isAsiDown => asiChangeAmount < 0;
+  bool get isAsiFlat => asiChangeAmount == 0;
+
+  // 포맷된 문자열 getter들
   String get formattedPrice {
     final formatter = NumberFormat('#,###');
     return formatter.format(currentPrice);
@@ -68,12 +80,29 @@ class StockModel {
 
   String get formattedChangeAmount {
     final formatter = NumberFormat('#,###');
-    final absAmount = changeAmount.abs();
-    return formatter.format(absAmount);
+    return formatter.format(changeAmount.abs());
   }
 
   String get formattedChangePercent {
-    return changePercent.abs().toStringAsFixed(2);
+    final symbol = isUp ? '+' : (isFlat ? '' : '');
+    return '$symbol${changePercent.toStringAsFixed(2)}%';
+  }
+
+// ASI 현재값 포맷 (추가됨)
+  String get formattedCurrentAsi {
+    return currentAsi.toString();
+  }
+
+// 기존 ASI 변화율 포맷 (참고용으로 남겨둠)
+  String get formattedAsiChangePercent {
+    final symbol = isAsiUp ? '+' : (isAsiFlat ? '' : '');
+    return 'ASI $symbol${asiChangePercent.toStringAsFixed(2)}%';
+  }
+
+  // ASI 값과 변화율을 함께 표시하는 포맷
+  String get formattedAsiWithChange {
+    final symbol = isAsiUp ? '+' : (isAsiFlat ? '' : '');
+    return '$currentAsi $symbol${asiChangePercent.toStringAsFixed(2)}%';
   }
 
   String get changeSymbol {
@@ -81,4 +110,5 @@ class StockModel {
     if (isDown) return '-';
     return '';
   }
+
 }

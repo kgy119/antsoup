@@ -38,14 +38,14 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(56.h);
 }
 
-// 주식 카드 위젯
 class StockCard extends StatelessWidget {
   final String stockName;
   final String stockCode;
   final String currentPrice;
-  final String changeAmount;
-  final String changePercent;
+  final String priceChangePercent;
+  final String asiWithChange;        // currentAsi -> asiWithChange로 변경
   final bool isUp;
+  final bool isAsiUp;
   final VoidCallback? onTap;
 
   const StockCard({
@@ -53,15 +53,34 @@ class StockCard extends StatelessWidget {
     required this.stockName,
     required this.stockCode,
     required this.currentPrice,
-    required this.changeAmount,
-    required this.changePercent,
+    required this.priceChangePercent,
+    required this.asiWithChange,      // currentAsi -> asiWithChange로 변경
     required this.isUp,
+    required this.isAsiUp,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final changeColor = isUp ? AppColors.stockUp : AppColors.stockDown;
+    // 종가 변화율 색상 결정
+    Color priceColor;
+    if (priceChangePercent.contains('0.00%') || priceChangePercent == '0.00%') {
+      priceColor = Colors.black;
+    } else if (isUp) {
+      priceColor = AppColors.stockUp;
+    } else {
+      priceColor = AppColors.stockDown;
+    }
+
+    // ASI 색상 결정
+    Color asiColor;
+    if (asiWithChange.contains('0.00%')) {
+      asiColor = Colors.black;           // 변화없으면 검은색
+    } else if (isAsiUp) {
+      asiColor = AppColors.stockUp;      // 상승시 빨간색
+    } else {
+      asiColor = AppColors.stockDown;    // 하락시 파란색
+    }
 
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -93,25 +112,31 @@ class StockCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  // 현재가
                   Text(
                     currentPrice,
-                    style: AppTextStyles.stockPrice,
+                    style: AppTextStyles.stockPrice.copyWith(
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  // 가격 변화율
+                  Text(
+                    priceChangePercent,
+                    style: AppTextStyles.stockChange.copyWith(
+                      color: priceColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Icon(
-                        isUp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        color: changeColor,
-                        size: 16.sp,
-                      ),
-                      Text(
-                        '$changeAmount ($changePercent%)',
-                        style: AppTextStyles.stockChange.copyWith(
-                          color: changeColor,
-                        ),
-                      ),
-                    ],
+                  // ASI 값과 변화율
+                  Text(
+                    asiWithChange,  // 예: "170 +5.20%" 또는 "51 -2.15%"
+                    style: AppTextStyles.caption.copyWith(
+                      color: asiColor,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11.sp,
+                    ),
                   ),
                 ],
               ),

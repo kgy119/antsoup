@@ -108,9 +108,10 @@ class HomePage extends GetView<HomeController> {
                           stockName: stock.name,
                           stockCode: stock.code,
                           currentPrice: stock.formattedPrice,
-                          changeAmount: stock.formattedChangeAmount,
-                          changePercent: stock.formattedChangePercent,
+                          priceChangePercent: stock.formattedChangePercent,
+                          asiWithChange: stock.formattedAsiWithChange,     // 변경됨
                           isUp: stock.isUp,
+                          isAsiUp: stock.isAsiUp,
                           onTap: () => controller.goToStockDetail(stock.code),
                         );
                       },
@@ -147,9 +148,10 @@ class HomePage extends GetView<HomeController> {
                           stockName: stock.name,
                           stockCode: stock.code,
                           currentPrice: stock.formattedPrice,
-                          changeAmount: stock.formattedChangeAmount,
-                          changePercent: stock.formattedChangePercent,
+                          priceChangePercent: stock.formattedChangePercent,
+                          asiWithChange: stock.formattedAsiWithChange,     // 변경됨
                           isUp: stock.isUp,
+                          isAsiUp: stock.isAsiUp,
                           onTap: () => controller.goToStockDetail(stock.code),
                         );
                       },
