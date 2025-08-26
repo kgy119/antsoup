@@ -43,22 +43,34 @@ class StockDetailPage extends GetView<StockDetailController> {
 
         final stock = controller.stockDetail.value;
         if (stock == null) {
-          return const Center(child: Text('종목 정보를 찾을 수 없습니다.'));
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '종목 정보가 없습니다.',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         return SingleChildScrollView(
           child: Column(
             children: [
-              // 주가 정보
               _buildPriceSection(stock),
-
-              // 기간 선택
               _buildPeriodSelector(),
-
-              // 차트
               _buildChart(),
-
-              // 종목 정보
               _buildStockInfo(stock),
             ],
           ),

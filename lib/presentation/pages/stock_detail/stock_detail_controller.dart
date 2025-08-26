@@ -1,9 +1,13 @@
 import 'package:get/get.dart';
 import '../../../data/models/stock_detail_model.dart';
 import '../../../data/providers/api_provider.dart';
+import '../../../data/providers/local_storage_provider.dart';
+import '../watchlist/watchlist_controller.dart';
+
 
 class StockDetailController extends GetxController {
   final ApiProvider _apiProvider = Get.find<ApiProvider>();
+  final LocalStorageProvider _localStorage = Get.find<LocalStorageProvider>();
 
   final isLoading = true.obs;
   final stockDetail = Rx<StockDetailModel?>(null);
@@ -21,7 +25,67 @@ class StockDetailController extends GetxController {
   void onInit() {
     super.onInit();
     loadStockDetail();
+    // 관심종목 상태 확인
+    _checkWatchlistStatus();
   }
+
+  void _checkWatchlistStatus() {
+    final localStorage = Get.find<LocalStorageProvider>();
+    isWatchlisted.value = localStorage.isInWatchlist(stockCode);
+  }
+
+  Future<void> addToWatchlist() async {
+    try {
+      final localStorage = Get.find<LocalStorageProvider>();
+      await localStorage.addToWatchlist(stockCode);
+
+      // WatchlistController가 등록되어 있다면 새로고침
+      if (Get.isRegistered<WatchlistController>()) {
+        Get.find<WatchlistController>().loadWatchlist();
+      }
+
+      Get.snackbar(
+        '완료',
+        '관심종목에 추가되었습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('관심종목 추가 실패: $e');
+      isWatchlisted.value = false;
+      Get.snackbar(
+        '오류',
+        '관심종목 추가에 실패했습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  Future<void> removeFromWatchlist() async {
+    try {
+      final localStorage = Get.find<LocalStorageProvider>();
+      await localStorage.removeFromWatchlist(stockCode);
+
+      // WatchlistController가 등록되어 있다면 새로고침
+      if (Get.isRegistered<WatchlistController>()) {
+        Get.find<WatchlistController>().loadWatchlist();
+      }
+
+      Get.snackbar(
+        '완료',
+        '관심종목에서 제거되었습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('관심종목 제거 실패: $e');
+      isWatchlisted.value = true;
+      Get.snackbar(
+        '오류',
+        '관심종목 제거에 실패했습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
 
   Future<void> loadStockDetail() async {
     isLoading.value = true;
@@ -87,46 +151,6 @@ class StockDetailController extends GetxController {
       addToWatchlist();
     } else {
       removeFromWatchlist();
-    }
-  }
-
-  Future<void> addToWatchlist() async {
-    try {
-      // TODO: 디바이스 ID 가져오기
-      await _apiProvider.addToWatchlist(stockCode);
-      Get.snackbar(
-        '완료',
-        '관심종목에 추가되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      print('관심종목 추가 실패: $e');
-      isWatchlisted.value = false; // 실패시 원복
-      Get.snackbar(
-        '오류',
-        '관심종목 추가에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-  Future<void> removeFromWatchlist() async {
-    try {
-      // TODO: 디바이스 ID 가져오기
-      await _apiProvider.removeFromWatchlist(stockCode);
-      Get.snackbar(
-        '완료',
-        '관심종목에서 제거되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      print('관심종목 제거 실패: $e');
-      isWatchlisted.value = true; // 실패시 원복
-      Get.snackbar(
-        '오류',
-        '관심종목 제거에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
     }
   }
 

@@ -3,18 +3,18 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../controllers/main_navigation_controller.dart';
-import '../../pages/chart/chart_controller.dart';
 import '../../pages/community/community_controller.dart';
 import '../../pages/home/home_controller.dart';
 import '../../pages/home/home_page.dart';
 import '../../pages/home/home_binding.dart';
 import '../../pages/community/community_page.dart';
 import '../../pages/community/community_binding.dart';
-import '../../pages/chart/chart_page.dart';
-import '../../pages/chart/chart_binding.dart';
 import '../../pages/stock/stock_controller.dart';
 import '../../pages/stock/stock_page.dart';
 import '../../pages/stock/stock_binding.dart';
+import '../../pages/watchlist/watchlist_binding.dart';
+import '../../pages/watchlist/watchlist_controller.dart';
+import '../../pages/watchlist/watchlist_page.dart';
 import '../../../data/providers/local_storage_provider.dart';
 
 class MainNavigation extends GetView<MainNavigationController> {
@@ -34,8 +34,8 @@ class MainNavigation extends GetView<MainNavigationController> {
         children: const [
           HomePage(),
           StockPage(),
+          WatchlistPage(),  // 차트 대신 관심종목
           CommunityPage(),
-          ChartPage(),
         ],
       )),
       bottomNavigationBar: Obx(() => BottomNavigationBar(
@@ -58,14 +58,14 @@ class MainNavigation extends GetView<MainNavigationController> {
             label: '종목',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.star_outline),
+            activeIcon: Icon(Icons.star),
+            label: '관심종목',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),
             activeIcon: Icon(Icons.forum),
             label: '커뮤니티',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics_outlined),
-            activeIcon: Icon(Icons.analytics),
-            label: '차트',
           ),
         ],
       )),
@@ -80,11 +80,11 @@ class MainNavigation extends GetView<MainNavigationController> {
     if (!Get.isRegistered<StockController>()) {
       StockBinding().dependencies();
     }
+    if (!Get.isRegistered<WatchlistController>()) {
+      WatchlistBinding().dependencies();
+    }
     if (!Get.isRegistered<CommunityController>()) {
       CommunityBinding().dependencies();
-    }
-    if (!Get.isRegistered<ChartController>()) {
-      ChartBinding().dependencies();
     }
   }
 

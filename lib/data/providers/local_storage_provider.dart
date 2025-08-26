@@ -89,14 +89,44 @@ class LocalStorageProvider extends GetxService {
     };
   }
 
-  // 관심 종목 로컬 저장 (캐시)
+  // 관심 종목 로컬 저장 (캐시) - 통일된 Box 사용
   Future<void> saveWatchlistCache(List<String> stockCodes) async {
-    await _settingsBox?.put('watchlist', stockCodes);
+    await _cacheBox?.put('watchlist', stockCodes);  // _cacheBox로 통일
   }
 
   List<String> getWatchlistCache() {
     final List<dynamic>? cached = _cacheBox?.get('watchlist');
     return cached?.cast<String>() ?? [];
+  }
+
+  // 관심 종목 로컬 저장 (SharedPreferences 사용)
+  Future<void> saveWatchlist(List<String> stockCodes) async {
+    await _prefs?.setStringList('user_watchlist', stockCodes);
+  }
+
+  List<String> getWatchlist() {
+    return _prefs?.getStringList('user_watchlist') ?? [];
+  }
+
+// 관심 종목 추가
+  Future<void> addToWatchlist(String stockCode) async {
+    List<String> watchlist = getWatchlist();
+    if (!watchlist.contains(stockCode)) {
+      watchlist.add(stockCode);
+      await saveWatchlist(watchlist);
+    }
+  }
+
+// 관심 종목 제거
+  Future<void> removeFromWatchlist(String stockCode) async {
+    List<String> watchlist = getWatchlist();
+    watchlist.remove(stockCode);
+    await saveWatchlist(watchlist);
+  }
+
+// 관심 종목 여부 확인
+  bool isInWatchlist(String stockCode) {
+    return getWatchlist().contains(stockCode);
   }
 
   // 최근 검색어 저장/불러오기

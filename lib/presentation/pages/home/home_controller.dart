@@ -72,6 +72,48 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> loadPopularStocks() async {
+    try {
+      final stocks = await _apiProvider.getPopularStocks();
+      popularStocks.value = stocks;
+
+      if (stocks.isEmpty) {
+        print('인기 종목 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('인기 종목 로딩 실패: $e');
+      popularStocks.value = [];
+    }
+  }
+
+  Future<void> loadAntInterestStocks() async {
+    try {
+      final stocks = await _apiProvider.getAntInterestStocks();
+      antInterestStocks.value = stocks;
+
+      if (stocks.isEmpty) {
+        print('개미 관심 종목 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('개미 관심 종목 로딩 실패: $e');
+      antInterestStocks.value = [];
+    }
+  }
+
+  Future<void> loadMarketIndexes() async {
+    try {
+      final indexes = await _apiProvider.getMarketIndexes();
+      marketIndexes.value = indexes;
+
+      if (indexes.isEmpty) {
+        print('시장 지수 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('시장 지수 로딩 실패: $e');
+      marketIndexes.value = [];
+    }
+  }
+
   Future<void> loadInitialData() async {
     isLoading.value = true;
     hasError.value = false;
@@ -102,36 +144,6 @@ class HomeController extends GetxController {
     hasError.value = false;
     errorMessage.value = '';
     await loadInitialData();
-  }
-
-  Future<void> loadPopularStocks() async {
-    try {
-      final stocks = await _apiProvider.getPopularStocks();
-      popularStocks.value = stocks;
-    } catch (e) {
-      print('인기 종목 로딩 실패: $e');
-      popularStocks.value = [];
-    }
-  }
-
-  Future<void> loadAntInterestStocks() async {
-    try {
-      final stocks = await _apiProvider.getAntInterestStocks();
-      antInterestStocks.value = stocks;
-    } catch (e) {
-      print('개미 관심 종목 로딩 실패: $e');
-      antInterestStocks.value = [];
-    }
-  }
-
-  Future<void> loadMarketIndexes() async {
-    try {
-      final indexes = await _apiProvider.getMarketIndexes();
-      marketIndexes.value = indexes;
-    } catch (e) {
-      print('시장 지수 로딩 실패: $e');
-      marketIndexes.value = [];
-    }
   }
 
   void onSearchChanged(String query) {

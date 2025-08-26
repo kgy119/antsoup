@@ -88,18 +88,6 @@ class HomePage extends GetView<HomeController> {
                     );
                   }
 
-                  if (controller.errorMessage.value.isNotEmpty && controller.popularStocks.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: 200.h,
-                        child: ErrorWidget(
-                          message: controller.errorMessage.value,
-                          onRetry: controller.loadInitialData,
-                        ),
-                      ),
-                    );
-                  }
-
                   if (controller.popularStocks.isEmpty) {
                     return SliverToBoxAdapter(
                       child: SizedBox(
@@ -131,6 +119,7 @@ class HomePage extends GetView<HomeController> {
                   );
                 }),
 
+
                 // 개미 관심 종목 섹션
                 SliverToBoxAdapter(
                   child: _buildSectionHeader('🐜 개미들의 관심종목', '더보기'),
@@ -138,6 +127,18 @@ class HomePage extends GetView<HomeController> {
 
                 // 개미 관심 종목 리스트
                 Obx(() {
+                  if (controller.antInterestStocks.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 200.h,
+                        child: const EmptyWidget(
+                          message: '개미 관심 종목 데이터가 없습니다.',
+                          icon: Icons.interests_outlined,
+                        ),
+                      ),
+                    );
+                  }
+
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                           (context, index) {
@@ -159,11 +160,21 @@ class HomePage extends GetView<HomeController> {
 
                 // 시장 지수 섹션
                 SliverToBoxAdapter(
-                  child: _buildSectionHeader('📊 시장 지수', ''),
-                ),
-
-                SliverToBoxAdapter(
-                  child: _buildMarketIndexes(),
+                  child: Obx(() {
+                    if (controller.marketIndexes.isEmpty) {
+                      return Container(
+                        height: 120.h,
+                        margin: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: const Center(
+                          child: Text(
+                            '시장 지수 데이터가 없습니다.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      );
+                    }
+                    return _buildMarketIndexes();
+                  }),
                 ),
 
                 // 하단 여백

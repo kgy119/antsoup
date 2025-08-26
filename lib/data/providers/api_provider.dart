@@ -7,39 +7,54 @@ import '../models/stock_detail_model.dart';
 class ApiProvider extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
 
-  // 인기 종목 조회
+  // 인기 종목 조회 (ASI 값이 가장 큰 5개)
   Future<List<StockModel>> getPopularStocks() async {
     try {
       final response = await _apiService.get('/stocks/popular.php');
 
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
-        return data.map((json) => StockModel.fromJson(json)).toList();
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'current_price': json['close_price'],
+          'change_amount': json['change_amount'] ?? 0,
+          'change_percent': json['change_percent'] ?? 0.0,
+          'asi': json['asi'], // ASI 값 추가
+        })).toList();
       } else {
         throw Exception(response.data['message'] ?? '인기 종목 조회 실패');
       }
     } catch (e) {
-      throw Exception('인기 종목 조회 실패: $e');
+      print('인기 종목 조회 실패: $e');
+      return []; // 빈 리스트 반환
     }
   }
 
-  // 개미 관심 종목 조회
+// 개미 관심 종목 조회 (랜덤 10개)
   Future<List<StockModel>> getAntInterestStocks() async {
     try {
       final response = await _apiService.get('/stocks/ant-interest.php');
 
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
-        return data.map((json) => StockModel.fromJson(json)).toList();
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'current_price': json['close_price'] ?? 0,
+          'change_amount': json['change_amount'] ?? 0,
+          'change_percent': json['change_percent'] ?? 0.0,
+        })).toList();
       } else {
         throw Exception(response.data['message'] ?? '개미 관심 종목 조회 실패');
       }
     } catch (e) {
-      throw Exception('개미 관심 종목 조회 실패: $e');
+      print('개미 관심 종목 조회 실패: $e');
+      return []; // 빈 리스트 반환
     }
   }
 
-  // 시장 지수 조회
+// 시장 지수 조회
   Future<List<MarketIndexModel>> getMarketIndexes() async {
     try {
       final response = await _apiService.get('/market/indexes.php');
@@ -51,12 +66,13 @@ class ApiProvider extends GetxService {
         throw Exception(response.data['message'] ?? '시장 지수 조회 실패');
       }
     } catch (e) {
-      throw Exception('시장 지수 조회 실패: $e');
+      print('시장 지수 조회 실패: $e');
+      return []; // 빈 리스트 반환
     }
   }
 
-  // 종목 상세 정보 조회
-  Future<StockDetailModel> getStockDetail(String stockCode, {String period = '1개월'}) async {
+// 종목 상세 정보 조회
+  Future<StockDetailModel?> getStockDetail(String stockCode, {String period = '1개월'}) async {
     try {
       final response = await _apiService.get(
         '/stocks/detail.php',
@@ -72,7 +88,8 @@ class ApiProvider extends GetxService {
         throw Exception(response.data['message'] ?? '종목 상세 정보 조회 실패');
       }
     } catch (e) {
-      throw Exception('종목 상세 정보 조회 실패: $e');
+      print('종목 상세 정보 조회 실패: $e');
+      return null; // null 반환
     }
   }
 
