@@ -292,15 +292,57 @@ class StockDetailPage extends GetView<StockDetailController> {
       // 개미탕 지수가 있는 경우에만 추가
       if (i < stock.antSoupIndex.length) {
         final antData = stock.antSoupIndex[i];
-        // 개미탕 지수를 가격 범위에 맞게 스케일링
-        final scaledValue = minPrice + (antData.value / 100) * (maxPrice - minPrice);
-        antSoupSpots.add(FlSpot(i.toDouble(), scaledValue));
+
+        // 개미탕 지수를 -40 ~ 240 범위에서 주식 가격 범위로 매핑
+        const antSoupMin = -40.0;
+        const antSoupMax = 240.0;
+
+        // 개미탕 지수 값을 -40 ~ 240 범위로 정규화한 후, 주식 가격 범위에 매핑
+        final normalizedAntValue = (antData.value - antSoupMin) / (antSoupMax - antSoupMin);
+        final mappedValue = minPrice + normalizedAntValue * (maxPrice - minPrice);
+
+        antSoupSpots.add(FlSpot(i.toDouble(), mappedValue));
       }
     }
 
     print('FlSpot 생성 완료: 가격 ${priceSpots.length}개, 개미탕 ${antSoupSpots.length}개');
 
     return LineChartData(
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipBorder: const BorderSide(color: Colors.black87),
+          tooltipRoundedRadius: 8,
+          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+            List<LineTooltipItem> items = [];
+            final index = touchedSpots.isNotEmpty ? touchedSpots.first.x.toInt() : 0;
+
+            // 항상 주가를 먼저 추가 (파란색)
+            if (index < stock.priceHistory.length) {
+              final priceData = stock.priceHistory[index];
+              items.add(LineTooltipItem(
+                '${priceData.value.toStringAsFixed(0)}원',
+                const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              ));
+            }
+
+            // 그 다음 개미탕 지수 추가 (빨간색)
+            if (index < stock.antSoupIndex.length) {
+              final antData = stock.antSoupIndex[index];
+              items.add(LineTooltipItem(
+                '${antData.value.toStringAsFixed(1)}',
+                const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ));
+            }
+
+            return items;
+          },
+        ),
+        touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+          // 터치 이벤트 처리 (필요시 추가 로직)
+        },
+        handleBuiltInTouches: true,
+      ),
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
@@ -371,7 +413,7 @@ class StockDetailPage extends GetView<StockDetailController> {
             color: AppColors.lightPrimary.withOpacity(0.1),
           ),
         ),
-        // 개미탕 지수 라인 (데이터가 있는 경우에만)
+        // 개미탕 지수 라인 (데이터가 있는 경우에만) - 오버레이로 표시
         if (antSoupSpots.isNotEmpty)
           LineChartBarData(
             spots: antSoupSpots,
