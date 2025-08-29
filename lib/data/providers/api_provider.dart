@@ -17,12 +17,17 @@ class ApiProvider extends GetxService {
         return data.map((json) => StockModel.fromJson({
           'code': json['code'],
           'name': json['name'],
-          'close_price': json['close_price'],              // ✅ close_price 그대로 사용
-          'price_change': json['price_change'],            // ✅ price_change 그대로 사용
-          'price_change_percent': json['price_change_percent'], // ✅ price_change_percent 그대로 사용
-          'current_asi': json['current_asi'],              // ✅ current_asi 그대로 사용
-          'asi_change': json['asi_change'],                // ✅ asi_change 그대로 사용
-          'asi_change_percent': json['asi_change_percent'], // ✅ asi_change_percent 그대로 사용
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          // 개미탕 지수 비교 데이터 (3개 기간)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
         })).toList();
       } else {
         throw Exception(response.data['message'] ?? '인기 종목 조회 실패');
@@ -43,12 +48,17 @@ class ApiProvider extends GetxService {
         return data.map((json) => StockModel.fromJson({
           'code': json['code'],
           'name': json['name'],
-          'close_price': json['close_price'],              // ✅ close_price 그대로 사용
-          'price_change': json['price_change'],            // ✅ price_change 그대로 사용
-          'price_change_percent': json['price_change_percent'], // ✅ price_change_percent 그대로 사용
-          'current_asi': json['current_asi'],              // ✅ current_asi 그대로 사용
-          'asi_change': json['asi_change'],                // ✅ asi_change 그대로 사용
-          'asi_change_percent': json['asi_change_percent'], // ✅ asi_change_percent 그대로 사용
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          // 개미탕 지수 비교 데이터 (3개 기간)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
         })).toList();
       } else {
         throw Exception(response.data['message'] ?? '개미 관심 종목 조회 실패');
@@ -77,8 +87,13 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
-          'asi_change': json['asi_change'],
-          'asi_change_percent': json['asi_change_percent'],
+          // 개미탕 지수 비교 데이터 (3개 기간)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
         }))
             .toList();
 

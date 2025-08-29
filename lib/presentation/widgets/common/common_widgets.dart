@@ -38,14 +38,20 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(56.h);
 }
 
+// lib/presentation/widgets/common/common_widgets.dart의 StockCard 부분만 수정
+
 class StockCard extends StatelessWidget {
   final String stockName;
   final String stockCode;
   final String currentPrice;
   final String priceChangePercent;
-  final String asiWithChange;
+  final String asiWithChange1;   // 직전 대비
+  final String asiWithChange3;   // 3번째전 대비
+  final String asiWithChange7;   // 7번째전 대비
   final bool isUp;
-  final bool isAsiUp;
+  final bool isAsiUp1;           // 직전 대비 증감
+  final bool isAsiUp3;           // 3번째전 대비 증감
+  final bool isAsiUp7;           // 7번째전 대비 증감
   final VoidCallback? onTap;
 
   const StockCard({
@@ -54,19 +60,25 @@ class StockCard extends StatelessWidget {
     required this.stockCode,
     required this.currentPrice,
     required this.priceChangePercent,
-    required this.asiWithChange,
+    required this.asiWithChange1,
+    required this.asiWithChange3,
+    required this.asiWithChange7,
     required this.isUp,
-    required this.isAsiUp,
+    required this.isAsiUp1,
+    required this.isAsiUp3,
+    required this.isAsiUp7,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 가격 변화에 따른 색상 결정 (종가와 변화율 모두 동일한 색상 사용)
+    // 가격 변화에 따른 색상 결정
     final priceColor = _getPriceChangeColor(priceChangePercent, isUp);
 
-    // ASI 변화에 따른 색상 결정
-    final asiColor = _getAsiChangeColor(asiWithChange, isAsiUp);
+    // 각 기간별 ASI 변화에 따른 색상 결정
+    final asiColor1 = _getAsiChangeColor(asiWithChange1, isAsiUp1);
+    final asiColor3 = _getAsiChangeColor(asiWithChange3, isAsiUp3);
+    final asiColor7 = _getAsiChangeColor(asiWithChange7, isAsiUp7);
 
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -77,6 +89,7 @@ class StockCard extends StatelessWidget {
           padding: EdgeInsets.all(16.w),
           child: Row(
             children: [
+              // 왼쪽: 종목명과 코드
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,34 +108,52 @@ class StockCard extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // 오른쪽: 가격 정보와 개미탕 지수들
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // 현재가 (변화율과 동일한 색상)
-                  Text(
-                    currentPrice,
-                    style: AppTextStyles.stockPrice.copyWith(
-                      color: priceColor, // 변화율과 동일한 색상
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // 현재가
+                      Text(
+                        currentPrice,
+                        style: AppTextStyles.stockPrice.copyWith(
+                          color: priceColor,
+                        ),
+                      ),
+                      SizedBox(width: 6.w), // 간격
+
+                      // 가격 변화율
+                      Text(
+                        priceChangePercent,
+                        style: AppTextStyles.stockChange.copyWith(
+                          color: priceColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 2.h),
-                  // 가격 변화율 (현재가와 동일한 색상)
-                  Text(
-                    priceChangePercent,
-                    style: AppTextStyles.stockChange.copyWith(
-                      color: priceColor, // 현재가와 동일한 색상
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  // ASI 값과 변화율
-                  Text(
-                    asiWithChange,
-                    style: AppTextStyles.caption.copyWith(
-                      color: asiColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11.sp,
-                    ),
+
+                  SizedBox(height: 6.h),
+
+                  // 개미탕 지수 3개 기간 표시
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 직전 대비
+                      _buildAsiItem('직전', asiWithChange1, asiColor1),
+                      SizedBox(width: 8.w),
+
+                      // 3번째전 대비
+                      _buildAsiItem('3전', asiWithChange3, asiColor3),
+                      SizedBox(width: 8.w),
+
+                      // 7번째전 대비
+                      _buildAsiItem('7전', asiWithChange7, asiColor7),
+                    ],
                   ),
                 ],
               ),
@@ -130,6 +161,33 @@ class StockCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  // 개별 ASI 항목을 표시하는 위젯
+  Widget _buildAsiItem(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.grey600,
+            fontSize: 9.sp,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        SizedBox(height: 1.h),
+        Text(
+          value,
+          style: AppTextStyles.caption.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 10.sp,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -152,9 +210,9 @@ class StockCard extends StatelessWidget {
 
   // ASI 변화율 색상 결정
   Color _getAsiChangeColor(String asiString, bool isAsiUp) {
-    // 0.00%가 포함되어 있는지 확인
-    if (asiString.contains('0.00%') || asiString.contains('+0.00%') || asiString.contains('-0.00%')) {
-      return Colors.black;
+    // 0.0%가 포함되어 있는지 확인
+    if (asiString.contains('0.0%') || asiString.contains('+0.0%') || asiString.contains('-0.0%')) {
+      return AppColors.grey600;
     }
 
     // +나 -가 포함되어 있는지 확인

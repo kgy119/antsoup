@@ -285,6 +285,10 @@ class StockDetailPage extends GetView<StockDetailController> {
     final priceSpots = <FlSpot>[];
     final antSoupSpots = <FlSpot>[];
 
+    // 차트의 실제 Y축 범위
+    final chartMinY = minPrice * 0.95;
+    final chartMaxY = maxPrice * 1.05;
+
     for (int i = 0; i < stock.priceHistory.length; i++) {
       final priceData = stock.priceHistory[i];
       priceSpots.add(FlSpot(i.toDouble(), priceData.value));
@@ -293,13 +297,13 @@ class StockDetailPage extends GetView<StockDetailController> {
       if (i < stock.antSoupIndex.length) {
         final antData = stock.antSoupIndex[i];
 
-        // 개미탕 지수를 -40 ~ 240 범위에서 주식 가격 범위로 매핑
+        // 개미탕 지수를 고정 범위 -40 ~ 240에서 차트 Y축 범위로 매핑
         const antSoupMin = -40.0;
         const antSoupMax = 240.0;
 
-        // 개미탕 지수 값을 -40 ~ 240 범위로 정규화한 후, 주식 가격 범위에 매핑
+        // 개미탕 지수 값을 차트 Y축 범위에 매핑
         final normalizedAntValue = (antData.value - antSoupMin) / (antSoupMax - antSoupMin);
-        final mappedValue = minPrice + normalizedAntValue * (maxPrice - minPrice);
+        final mappedValue = chartMinY + normalizedAntValue * (chartMaxY - chartMinY);
 
         antSoupSpots.add(FlSpot(i.toDouble(), mappedValue));
       }
@@ -397,8 +401,8 @@ class StockDetailPage extends GetView<StockDetailController> {
       borderData: FlBorderData(show: false),
       minX: 0,
       maxX: (priceSpots.length - 1).toDouble(),
-      minY: minPrice * 0.95,
-      maxY: maxPrice * 1.05,
+      minY: chartMinY,
+      maxY: chartMaxY,
       lineBarsData: [
         // 주가 라인
         LineChartBarData(
