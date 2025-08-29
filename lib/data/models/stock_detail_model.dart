@@ -14,6 +14,15 @@ class StockDetailModel {
   final List<ChartDataPoint> priceHistory;
   final List<ChartDataPoint> antSoupIndex;
 
+  // ASI 관련 필드 추가
+  final int? currentAsi;
+  final int? asiChange1;
+  final double? asiChangePercent1;
+  final int? asiChange3;
+  final double? asiChangePercent3;
+  final int? asiChange7;
+  final double? asiChangePercent7;
+
   StockDetailModel({
     required this.code,
     required this.name,
@@ -26,8 +35,16 @@ class StockDetailModel {
     required this.pbr,
     required this.priceHistory,
     required this.antSoupIndex,
+    this.currentAsi,
+    this.asiChange1,
+    this.asiChangePercent1,
+    this.asiChange3,
+    this.asiChangePercent3,
+    this.asiChange7,
+    this.asiChangePercent7,
   });
 
+  // fromJson에서도 ASI 데이터 파싱 추가
   factory StockDetailModel.fromJson(Map<String, dynamic> json) {
     return StockDetailModel(
       code: json['code'],
@@ -45,6 +62,14 @@ class StockDetailModel {
       antSoupIndex: (json['antSoupIndex'] as List)
           .map((item) => ChartDataPoint.fromJson(item))
           .toList(),
+      // ASI 데이터 추가
+      currentAsi: json['current_asi'],
+      asiChange1: json['asi_change_1'],
+      asiChangePercent1: (json['asi_change_percent_1'] as num?)?.toDouble(),
+      asiChange3: json['asi_change_3'],
+      asiChangePercent3: (json['asi_change_percent_3'] as num?)?.toDouble(),
+      asiChange7: json['asi_change_7'],
+      asiChangePercent7: (json['asi_change_percent_7'] as num?)?.toDouble(),
     );
   }
 

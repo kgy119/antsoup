@@ -5,6 +5,8 @@ import '../../../data/models/stock_model.dart';
 import '../../../data/models/market_index_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
+import '../../controllers/main_navigation_controller.dart';
+import '../stock/stock_controller.dart';
 
 class HomeController extends GetxController {
   final searchController = TextEditingController();
@@ -147,12 +149,40 @@ class HomeController extends GetxController {
   }
 
   void onSearchChanged(String query) {
-    if (query.length >= 2) {
-      searchStocks(query);
+    // if (query.length >= 2) {
+    //   searchStocks(query);
+    // }
+  }
+
+  void onSearchSubmitted() {
+    final query = searchController.text.trim();
+    print('홈에서 검색 제출: $query');
+    if (query.isNotEmpty) {
+      // 메인 네비게이션의 종목 탭으로 이동 (인덱스 1)
+      final mainNavController = Get.find<MainNavigationController>();
+      mainNavController.changePage(1);
+
+      // 약간의 지연 후 검색어 전달
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (Get.isRegistered<StockController>()) {
+          final stockController = Get.find<StockController>();
+          stockController.searchController.text = query;
+          stockController.searchStocks(query);
+        }
+      });
+
+      // 검색어를 최근 검색어에 추가
+      _localStorage.addRecentSearch(query);
+      // 검색창 포커스 해제
+      unfocusSearch();
+      // 홈 검색창 클리어
+      searchController.clear();
     }
   }
 
+
   Future<void> searchStocks(String keyword) async {
+    // 이 메서드는 더 이상 사용하지 않지만 호환성을 위해 유지
     try {
       final results = await _apiProvider.searchStocks(keyword);
       print('검색 결과: ${results.length}개');
@@ -160,6 +190,7 @@ class HomeController extends GetxController {
       print('검색 실패: $e');
     }
   }
+
 
   void goToStockDetail(String stockCode) {
     Get.toNamed('/stock/detail', arguments: {'stockCode': stockCode});

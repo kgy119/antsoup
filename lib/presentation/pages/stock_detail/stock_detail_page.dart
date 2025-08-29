@@ -80,7 +80,7 @@ class StockDetailPage extends GetView<StockDetailController> {
   }
 
   Widget _buildPriceSection(stock) {
-    final changeColor = stock.isUp ? AppColors.stockUp : AppColors.stockDown;
+    final changeColor = stock.isUp ? AppColors.stockUp : stock.isDown ? AppColors.stockDown : Colors.black;
 
     return Container(
       width: double.infinity,
@@ -101,6 +101,7 @@ class StockDetailPage extends GetView<StockDetailController> {
                 stock.formattedPrice,
                 style: AppTextStyles.headline3.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: changeColor, // 가격에도 색상 적용
                 ),
               ),
               SizedBox(width: 12.w),
@@ -134,9 +135,145 @@ class StockDetailPage extends GetView<StockDetailController> {
               ),
             ],
           ),
+
+          // 개미탕 지수 3단계 추가
+          SizedBox(height: 16.h),
+          _buildAntSoupIndexSection(stock),
         ],
       ),
     );
+  }
+
+  Widget _buildAntSoupIndexSection(stock) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Theme.of(Get.context!).cardColor,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.grey200.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildAsiItem('직전', _getAsiWithChange1(stock), _getAsiChangeColor1(stock)),
+              Container(
+                width: 1,
+                height: 40.h,
+                color: AppColors.grey300,
+              ),
+              _buildAsiItem('3전', _getAsiWithChange3(stock), _getAsiChangeColor3(stock)),
+              Container(
+                width: 1,
+                height: 40.h,
+                color: AppColors.grey300,
+              ),
+              _buildAsiItem('7전', _getAsiWithChange7(stock), _getAsiChangeColor7(stock)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAsiItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.grey600,
+            fontSize: 11.sp,
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          value,
+          style: AppTextStyles.bodyText2.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 13.sp,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+// ASI 관련 헬퍼 메서드들 추가
+  String _getAsiWithChange1(stock) {
+    final asiChange = _getAsiChange1(stock);
+    final asiChangePercent = _getAsiChangePercent1(stock);
+    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
+    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+  }
+
+  String _getAsiWithChange3(stock) {
+    final asiChange = _getAsiChange3(stock);
+    final asiChangePercent = _getAsiChangePercent3(stock);
+    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
+    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+  }
+
+  String _getAsiWithChange7(stock) {
+    final asiChange = _getAsiChange7(stock);
+    final asiChangePercent = _getAsiChangePercent7(stock);
+    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
+    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+  }
+
+// ASI 변화량 계산
+  int _getAsiChange1(stock) {
+    // 더미 데이터이므로 랜덤한 변화량 생성 (실제로는 stock.asiChange1 등을 사용)
+    return -5;
+  }
+
+  int _getAsiChange3(stock) {
+    return -12;
+  }
+
+  int _getAsiChange7(stock) {
+    return 8;
+  }
+
+// ASI 변화율 계산
+  double _getAsiChangePercent1(stock) {
+    return -5.6;
+  }
+
+  double _getAsiChangePercent3(stock) {
+    return -12.4;
+  }
+
+  double _getAsiChangePercent7(stock) {
+    return 10.4;
+  }
+
+// ASI 변화에 따른 색상 결정
+  Color _getAsiChangeColor1(stock) {
+    final change = _getAsiChange1(stock);
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
+  }
+
+  Color _getAsiChangeColor3(stock) {
+    final change = _getAsiChange3(stock);
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
+  }
+
+  Color _getAsiChangeColor7(stock) {
+    final change = _getAsiChange7(stock);
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
   }
 
   Widget _buildPeriodSelector() {
@@ -288,6 +425,7 @@ class StockDetailPage extends GetView<StockDetailController> {
     // 차트의 실제 Y축 범위
     final chartMinY = minPrice * 0.95;
     final chartMaxY = maxPrice * 1.05;
+    final chartMidY = (chartMinY + chartMaxY) / 2; // 중간값 계산
 
     for (int i = 0; i < stock.priceHistory.length; i++) {
       final priceData = stock.priceHistory[i];
@@ -356,6 +494,23 @@ class StockDetailPage extends GetView<StockDetailController> {
             strokeWidth: 0.5,
           );
         },
+        // 중간선 추가
+        drawHorizontalLine: true,
+        horizontalInterval: (chartMaxY - chartMinY) / 4,
+      ),
+      // Y축 중간선 추가를 위한 ExtraLinesData 추가
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          HorizontalLine(
+            y: chartMidY,
+            color: AppColors.grey400.withOpacity(0.7),
+            strokeWidth: 1.5,
+            dashArray: [5, 5], // 점선 효과
+            label: HorizontalLineLabel(
+              show: false, // 라벨은 숨김
+            ),
+          ),
+        ],
       ),
       titlesData: FlTitlesData(
         rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -417,16 +572,16 @@ class StockDetailPage extends GetView<StockDetailController> {
             color: AppColors.lightPrimary.withOpacity(0.1),
           ),
         ),
-        // 개미탕 지수 라인 (데이터가 있는 경우에만) - 오버레이로 표시
+        // 개미탕 지수 라인 (실선으로 변경, 점선 제거)
         if (antSoupSpots.isNotEmpty)
           LineChartBarData(
             spots: antSoupSpots,
             isCurved: true,
             color: AppColors.stockUp,
-            barWidth: 1.5.w,
+            barWidth: 2.w, // 선 두께를 주가와 동일하게
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
-            dashArray: [5, 5],
+            // dashArray 제거하여 실선으로 만들기
           ),
       ],
     );

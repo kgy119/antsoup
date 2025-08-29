@@ -68,7 +68,7 @@ class HomePage extends GetView<HomeController> {
                     onChanged: controller.onSearchChanged,
                     controller: controller.searchController,
                     focusNode: controller.searchFocusNode,
-                    onSubmitted: controller.unfocusSearch,
+                    onSubmitted: controller.onSearchSubmitted, // 검색 제출 시 콜백 변경
                   ),
                 ),
 

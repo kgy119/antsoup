@@ -78,7 +78,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
         onTap: widget.onTap,
         onSubmitted: (value) {
           widget.focusNode?.unfocus();
-          widget.onSubmitted?.call();
+          widget.onSubmitted?.call(); // 검색어를 파라미터로 전달하지 않고 콜백만 호출
         },
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(

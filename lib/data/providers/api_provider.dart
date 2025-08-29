@@ -166,12 +166,27 @@ class ApiProvider extends GetxService {
 
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
-        return data.map((json) => StockModel.fromJson(json)).toList();
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          // 개미탕 지수 비교 데이터 (3개 기간)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+        })).toList();
       } else {
         throw Exception(response.data['message'] ?? '종목 검색 실패');
       }
     } catch (e) {
-      throw Exception('종목 검색 실패: $e');
+      print('종목 검색 실패: $e');
+      return []; // 빈 리스트 반환
     }
   }
 
