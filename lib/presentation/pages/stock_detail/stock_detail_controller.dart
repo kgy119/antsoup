@@ -169,6 +169,14 @@ class StockDetailController extends GetxController {
         'marketCap': 4500000000000,
         'per': 12.5,
         'pbr': 1.2,
+        // ASI 관련 데이터
+        'currentAsi': 85,
+        'asiChange1': -5,       // 직전 대비 -5 (직전 지수는 90)
+        'asiChangePercent1': -5.6,
+        'asiChange3': -12,      // 3번째전 대비 -12 (3번째전 지수는 97)
+        'asiChangePercent3': -12.4,
+        'asiChange7': 8,        // 7번째전 대비 +8 (7번째전 지수는 77)
+        'asiChangePercent7': 10.4,
       },
       '000660': {
         'name': 'SK하이닉스',
@@ -179,6 +187,14 @@ class StockDetailController extends GetxController {
         'marketCap': 9100000000000,
         'per': 15.2,
         'pbr': 1.8,
+        // ASI 관련 데이터
+        'currentAsi': 92,
+        'asiChange1': 3,        // 직전 대비 +3 (직전 지수는 89)
+        'asiChangePercent1': 3.4,
+        'asiChange3': -8,       // 3번째전 대비 -8 (3번째전 지수는 100)
+        'asiChangePercent3': -8.0,
+        'asiChange7': 15,       // 7번째전 대비 +15 (7번째전 지수는 77)
+        'asiChangePercent7': 19.5,
       },
       '035420': {
         'name': 'NAVER',
@@ -189,6 +205,14 @@ class StockDetailController extends GetxController {
         'marketCap': 3050000000000,
         'per': 22.1,
         'pbr': 2.1,
+        // ASI 관련 데이터
+        'currentAsi': 78,
+        'asiChange1': -2,       // 직전 대비 -2 (직전 지수는 80)
+        'asiChangePercent1': -2.5,
+        'asiChange3': 5,        // 3번째전 대비 +5 (3번째전 지수는 73)
+        'asiChangePercent3': 6.8,
+        'asiChange7': -10,      // 7번째전 대비 -10 (7번째전 지수는 88)
+        'asiChangePercent7': -11.4,
       },
     };
 
@@ -206,6 +230,14 @@ class StockDetailController extends GetxController {
       pbr: data['pbr'],
       priceHistory: _generatePriceHistory(),
       antSoupIndex: _generateAntSoupIndex(),
+      // ASI 관련 필드 추가
+      currentAsi: data['currentAsi'],
+      asiChange1: data['asiChange1'],
+      asiChangePercent1: data['asiChangePercent1'],
+      asiChange3: data['asiChange3'],
+      asiChangePercent3: data['asiChangePercent3'],
+      asiChange7: data['asiChange7'],
+      asiChangePercent7: data['asiChangePercent7'],
     );
   }
 

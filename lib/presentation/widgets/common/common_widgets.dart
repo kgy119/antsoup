@@ -38,20 +38,19 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(56.h);
 }
 
-// lib/presentation/widgets/common/common_widgets.dart의 StockCard 부분만 수정
-
 class StockCard extends StatelessWidget {
   final String stockName;
   final String stockCode;
   final String currentPrice;
   final String priceChangePercent;
-  final String asiWithChange1;   // 직전 대비
-  final String asiWithChange3;   // 3번째전 대비
-  final String asiWithChange7;   // 7번째전 대비
+  final String currentAsi;          // 현재 ASI 지수 추가
+  final String asiWithChange1;      // 직전 대비
+  final String asiWithChange3;      // 3번째전 대비
+  final String asiWithChange7;      // 7번째전 대비
   final bool isUp;
-  final bool isAsiUp1;           // 직전 대비 증감
-  final bool isAsiUp3;           // 3번째전 대비 증감
-  final bool isAsiUp7;           // 7번째전 대비 증감
+  final bool isAsiUp1;              // 직전 대비 증감
+  final bool isAsiUp3;              // 3번째전 대비 증감
+  final bool isAsiUp7;              // 7번째전 대비 증감
   final VoidCallback? onTap;
 
   const StockCard({
@@ -60,6 +59,7 @@ class StockCard extends StatelessWidget {
     required this.stockCode,
     required this.currentPrice,
     required this.priceChangePercent,
+    required this.currentAsi,         // 현재 ASI 지수 필수 파라미터
     required this.asiWithChange1,
     required this.asiWithChange3,
     required this.asiWithChange7,
@@ -113,6 +113,7 @@ class StockCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  // 첫 번째 줄: 현재가 + 변화율 + 현재 ASI
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -124,7 +125,7 @@ class StockCard extends StatelessWidget {
                           color: priceColor,
                         ),
                       ),
-                      SizedBox(width: 6.w), // 간격
+                      SizedBox(width: 6.w),
 
                       // 가격 변화율
                       Text(
@@ -134,12 +135,30 @@ class StockCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      SizedBox(width: 8.w),
+
+                      // 현재 ASI 지수 (검은색)
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          'ASI $currentAsi',
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
                   SizedBox(height: 6.h),
 
-                  // 개미탕 지수 3개 기간 표시
+                  // 두 번째 줄: 개미탕 지수 3개 기간 표시
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -163,6 +182,7 @@ class StockCard extends StatelessWidget {
       ),
     );
   }
+
 
   // 개별 ASI 항목을 표시하는 위젯
   Widget _buildAsiItem(String label, String value, Color color) {

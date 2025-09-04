@@ -97,14 +97,16 @@ class WatchlistPage extends GetView<WatchlistController> {
                           stockCode: stock.code,
                           currentPrice: stock.formattedPrice,
                           priceChangePercent: stock.formattedChangePercent,
-                          asiWithChange1: stock.formattedAsiWithChange1,  // 직전 대비
-                          asiWithChange3: stock.formattedAsiWithChange3,  // 3번째전 대비
-                          asiWithChange7: stock.formattedAsiWithChange7,  // 7번째전 대비
+                          currentAsi: stock.formattedCurrentAsi,        // 현재 ASI 추가
+                          asiWithChange1: stock.formattedAsiWithChange1,
+                          asiWithChange3: stock.formattedAsiWithChange3,
+                          asiWithChange7: stock.formattedAsiWithChange7,
                           isUp: stock.isUp,
-                          isAsiUp1: stock.isAsiUp1,  // 직전 대비 증감
-                          isAsiUp3: stock.isAsiUp3,  // 3번째전 대비 증감
-                          isAsiUp7: stock.isAsiUp7,  // 7번째전 대비 증감
+                          isAsiUp1: stock.isAsiUp1,
+                          isAsiUp3: stock.isAsiUp3,
+                          isAsiUp7: stock.isAsiUp7,
                           onTap: () => controller.goToStockDetail(stock.code),
+
                         ),
                       );
                     },

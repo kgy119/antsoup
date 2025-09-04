@@ -7,7 +7,6 @@ import '../models/stock_detail_model.dart';
 class ApiProvider extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
 
-  /// 인기 종목 조회 (ASI 값이 가장 큰 5개)
   Future<List<StockModel>> getPopularStocks() async {
     try {
       final response = await _apiService.get('/stocks/popular.php');
@@ -21,7 +20,11 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
-          // 개미탕 지수 비교 데이터 (3개 기간)
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
           'asi_change_1': json['asi_change_1'],
           'asi_change_percent_1': json['asi_change_percent_1'],
           'asi_change_3': json['asi_change_3'],
@@ -38,7 +41,6 @@ class ApiProvider extends GetxService {
     }
   }
 
-// 개미 관심 종목 조회 (랜덤 10개)
   Future<List<StockModel>> getAntInterestStocks() async {
     try {
       final response = await _apiService.get('/stocks/ant-interest.php');
@@ -52,7 +54,11 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
-          // 개미탕 지수 비교 데이터 (3개 기간)
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
           'asi_change_1': json['asi_change_1'],
           'asi_change_percent_1': json['asi_change_percent_1'],
           'asi_change_3': json['asi_change_3'],
@@ -69,7 +75,6 @@ class ApiProvider extends GetxService {
     }
   }
 
-// 관심종목 조회에서도 동일하게 수정
   Future<Map<String, dynamic>> getWatchlistStocks(List<String> stockCodes) async {
     try {
       final response = await _apiService.post(
@@ -87,7 +92,11 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
-          // 개미탕 지수 비교 데이터 (3개 기간)
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
           'asi_change_1': json['asi_change_1'],
           'asi_change_percent_1': json['asi_change_percent_1'],
           'asi_change_3': json['asi_change_3'],
@@ -114,6 +123,43 @@ class ApiProvider extends GetxService {
         'total_requested': stockCodes.length,
         'total_found': 0,
       };
+    }
+  }
+
+  Future<List<StockModel>> searchStocks(String keyword) async {
+    try {
+      final response = await _apiService.get(
+        '/stocks/search.php',
+        queryParameters: {'keyword': keyword},
+      );
+
+      if (response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+        })).toList();
+      } else {
+        throw Exception(response.data['message'] ?? '종목 검색 실패');
+      }
+    } catch (e) {
+      print('종목 검색 실패: $e');
+      return [];
     }
   }
 
@@ -156,39 +202,6 @@ class ApiProvider extends GetxService {
     }
   }
 
-  // 종목 검색
-  Future<List<StockModel>> searchStocks(String keyword) async {
-    try {
-      final response = await _apiService.get(
-        '/stocks/search.php',
-        queryParameters: {'keyword': keyword},
-      );
-
-      if (response.data['success'] == true) {
-        final List<dynamic> data = response.data['data'];
-        return data.map((json) => StockModel.fromJson({
-          'code': json['code'],
-          'name': json['name'],
-          'close_price': json['close_price'],
-          'price_change': json['price_change'],
-          'price_change_percent': json['price_change_percent'],
-          'current_asi': json['current_asi'],
-          // 개미탕 지수 비교 데이터 (3개 기간)
-          'asi_change_1': json['asi_change_1'],
-          'asi_change_percent_1': json['asi_change_percent_1'],
-          'asi_change_3': json['asi_change_3'],
-          'asi_change_percent_3': json['asi_change_percent_3'],
-          'asi_change_7': json['asi_change_7'],
-          'asi_change_percent_7': json['asi_change_percent_7'],
-        })).toList();
-      } else {
-        throw Exception(response.data['message'] ?? '종목 검색 실패');
-      }
-    } catch (e) {
-      print('종목 검색 실패: $e');
-      return []; // 빈 리스트 반환
-    }
-  }
 
   // FCM 토큰 등록 (디바이스 식별용)
   Future<void> registerFcmToken(String token, {String? deviceId}) async {

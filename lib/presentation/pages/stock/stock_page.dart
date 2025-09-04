@@ -99,6 +99,7 @@ class StockPage extends GetView<StockController> {
                   stockCode: stock.code,
                   currentPrice: stock.formattedPrice,
                   priceChangePercent: stock.formattedChangePercent,
+                  currentAsi: stock.formattedCurrentAsi,            // 현재 ASI 추가
                   asiWithChange1: stock.formattedAsiWithChange1,
                   asiWithChange3: stock.formattedAsiWithChange3,
                   asiWithChange7: stock.formattedAsiWithChange7,
@@ -107,6 +108,7 @@ class StockPage extends GetView<StockController> {
                   isAsiUp3: stock.isAsiUp3,
                   isAsiUp7: stock.isAsiUp7,
                   onTap: () => controller.goToStockDetail(stock.code),
+
                 );
               },
             ),

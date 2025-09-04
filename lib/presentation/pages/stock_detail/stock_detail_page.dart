@@ -101,7 +101,7 @@ class StockDetailPage extends GetView<StockDetailController> {
                 stock.formattedPrice,
                 style: AppTextStyles.headline3.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: changeColor, // 가격에도 색상 적용
+                  color: changeColor,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -136,7 +136,51 @@ class StockDetailPage extends GetView<StockDetailController> {
             ],
           ),
 
-          // 개미탕 지수 3단계 추가
+          // 현재 ASI 지수 표시 추가
+          SizedBox(height: 12.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Theme.of(Get.context!).brightness == Brightness.dark
+                  ? Colors.grey[800]?.withOpacity(0.5)
+                  : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color: AppColors.grey300.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.trending_up,
+                  size: 16.sp,
+                  color: AppColors.grey600,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  ' ASI 지수',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '${stock.currentAsi ?? 0}',
+                  style: AppTextStyles.bodyText1.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(Get.context!).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 개미탕 지수 3단계 표시
           SizedBox(height: 16.h),
           _buildAntSoupIndexSection(stock),
         ],
@@ -207,24 +251,87 @@ class StockDetailPage extends GetView<StockDetailController> {
 
 // ASI 관련 헬퍼 메서드들 추가
   String _getAsiWithChange1(stock) {
-    final asiChange = _getAsiChange1(stock);
+    // 직전 시점의 지수값과 변화율 표시
+    final prevAsi1 = _getPrevAsi1(stock);
     final asiChangePercent = _getAsiChangePercent1(stock);
-    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
-    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+    final symbol = asiChangePercent > 0 ? '+' : (asiChangePercent == 0 ? '' : '');
+    return '$prevAsi1\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
   }
 
   String _getAsiWithChange3(stock) {
-    final asiChange = _getAsiChange3(stock);
+    // 3번째전 시점의 지수값과 변화율 표시
+    final prevAsi3 = _getPrevAsi3(stock);
     final asiChangePercent = _getAsiChangePercent3(stock);
-    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
-    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+    final symbol = asiChangePercent > 0 ? '+' : (asiChangePercent == 0 ? '' : '');
+    return '$prevAsi3\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
   }
 
   String _getAsiWithChange7(stock) {
-    final asiChange = _getAsiChange7(stock);
+    // 7번째전 시점의 지수값과 변화율 표시
+    final prevAsi7 = _getPrevAsi7(stock);
     final asiChangePercent = _getAsiChangePercent7(stock);
-    final symbol = asiChange > 0 ? '+' : (asiChange == 0 ? '' : '');
-    return '${stock.currentAsi ?? 0}\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+    final symbol = asiChangePercent > 0 ? '+' : (asiChangePercent == 0 ? '' : '');
+    return '$prevAsi7\n$symbol${asiChangePercent.toStringAsFixed(1)}%';
+  }
+
+// 각 시점의 ASI 지수값을 올바르게 계산하는 메서드들
+  int _getPrevAsi1(stock) {
+    // 직전 지수 = 현재 지수 - 직전 대비 변화량
+    // 예: 현재 85, 변화량 -5 → 직전 지수 = 85 - (-5) = 90
+    return stock.asiChange1 != null
+        ? (stock.currentAsi ?? 0) - stock.asiChange1
+        : (stock.currentAsi ?? 85) + 5;  // 더미 데이터용
+  }
+
+  int _getPrevAsi3(stock) {
+    // 3번째전 지수 = 현재 지수 - 3번째전 대비 변화량
+    // 예: 현재 85, 변화량 -12 → 3번째전 지수 = 85 - (-12) = 97
+    return stock.asiChange3 != null
+        ? (stock.currentAsi ?? 0) - stock.asiChange3
+        : (stock.currentAsi ?? 85) + 12;  // 더미 데이터용
+  }
+
+  int _getPrevAsi7(stock) {
+    // 7번째전 지수 = 현재 지수 - 7번째전 대비 변화량
+    // 예: 현재 85, 변화량 +8 → 7번째전 지수 = 85 - 8 = 77
+    return stock.asiChange7 != null
+        ? (stock.currentAsi ?? 0) - stock.asiChange7
+        : (stock.currentAsi ?? 85) - 8;  // 더미 데이터용
+  }
+
+// ASI 변화율 계산 (기존 메서드들은 유지)
+  double _getAsiChangePercent1(stock) {
+    return stock.asiChangePercent1 ?? -5.6;
+  }
+
+  double _getAsiChangePercent3(stock) {
+    return stock.asiChangePercent3 ?? -12.4;
+  }
+
+  double _getAsiChangePercent7(stock) {
+    return stock.asiChangePercent7 ?? 10.4;
+  }
+
+// ASI 변화에 따른 색상 결정 - 서버 데이터 기반
+  Color _getAsiChangeColor1(stock) {
+    final change = stock.asiChange1 ?? 0;
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
+  }
+
+  Color _getAsiChangeColor3(stock) {
+    final change = stock.asiChange3 ?? 0;
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
+  }
+
+  Color _getAsiChangeColor7(stock) {
+    final change = stock.asiChange7 ?? 0;
+    if (change > 0) return AppColors.stockUp;
+    if (change < 0) return AppColors.stockDown;
+    return AppColors.grey600;
   }
 
 // ASI 변화량 계산
@@ -239,41 +346,6 @@ class StockDetailPage extends GetView<StockDetailController> {
 
   int _getAsiChange7(stock) {
     return 8;
-  }
-
-// ASI 변화율 계산
-  double _getAsiChangePercent1(stock) {
-    return -5.6;
-  }
-
-  double _getAsiChangePercent3(stock) {
-    return -12.4;
-  }
-
-  double _getAsiChangePercent7(stock) {
-    return 10.4;
-  }
-
-// ASI 변화에 따른 색상 결정
-  Color _getAsiChangeColor1(stock) {
-    final change = _getAsiChange1(stock);
-    if (change > 0) return AppColors.stockUp;
-    if (change < 0) return AppColors.stockDown;
-    return AppColors.grey600;
-  }
-
-  Color _getAsiChangeColor3(stock) {
-    final change = _getAsiChange3(stock);
-    if (change > 0) return AppColors.stockUp;
-    if (change < 0) return AppColors.stockDown;
-    return AppColors.grey600;
-  }
-
-  Color _getAsiChangeColor7(stock) {
-    final change = _getAsiChange7(stock);
-    if (change > 0) return AppColors.stockUp;
-    if (change < 0) return AppColors.stockDown;
-    return AppColors.grey600;
   }
 
   Widget _buildPeriodSelector() {

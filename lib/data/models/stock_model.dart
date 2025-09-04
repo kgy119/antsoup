@@ -2,8 +2,6 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:intl/intl.dart';
 
 @JsonSerializable()
-// lib/data/models/stock_model.dart의 수정된 부분
-
 class StockModel {
   final String code;
   final String name;
@@ -12,7 +10,12 @@ class StockModel {
   final double changePercent;
   final int currentAsi;
 
-  // 개미탕 지수 비교 데이터 (직전, 3번째전, 7번째전)
+  // 기간별 ASI 지수값 (각 시점의 실제 지수)
+  final int prevAsi1;              // 직전 시점의 ASI 지수
+  final int prevAsi3;              // 3번째전 시점의 ASI 지수
+  final int prevAsi7;              // 7번째전 시점의 ASI 지수
+
+  // 개미탕 지수 비교 데이터 (변화량과 변화율)
   final int asiChangeAmount1;      // 직전 대비 변화량
   final double asiChangePercent1;  // 직전 대비 변화율
   final int asiChangeAmount3;      // 3번째전 대비 변화량
@@ -27,6 +30,9 @@ class StockModel {
     required this.changeAmount,
     required this.changePercent,
     required this.currentAsi,
+    required this.prevAsi1,
+    required this.prevAsi3,
+    required this.prevAsi7,
     required this.asiChangeAmount1,
     required this.asiChangePercent1,
     required this.asiChangeAmount3,
@@ -43,6 +49,11 @@ class StockModel {
       changeAmount: _parseToInt(json['price_change'] ?? 0),
       changePercent: _parseToDouble(json['price_change_percent'] ?? 0.0),
       currentAsi: _parseToInt(json['current_asi'] ?? 0),
+      // 기간별 ASI 지수값 추가
+      prevAsi1: _parseToInt(json['prev_asi_1'] ?? json['current_asi'] ?? 0),
+      prevAsi3: _parseToInt(json['prev_asi_3'] ?? json['current_asi'] ?? 0),
+      prevAsi7: _parseToInt(json['prev_asi_7'] ?? json['current_asi'] ?? 0),
+      // 변화량과 변화율
       asiChangeAmount1: _parseToInt(json['asi_change_1'] ?? 0),
       asiChangePercent1: _parseToDouble(json['asi_change_percent_1'] ?? 0.0),
       asiChangeAmount3: _parseToInt(json['asi_change_3'] ?? 0),
@@ -51,6 +62,26 @@ class StockModel {
       asiChangePercent7: _parseToDouble(json['asi_change_percent_7'] ?? 0.0),
     );
   }
+
+  // 현재 ASI 지수 포맷
+  String get formattedCurrentAsi {
+    return currentAsi.toString();
+  }
+
+  // 각 기간별 ASI와 변화율을 함께 표시하는 포맷 (수정됨)
+  String get formattedAsiWithChange1 {
+    return '$prevAsi1 ${formattedAsiChangePercent1}';  // 직전 지수값 + 변화율
+  }
+
+  String get formattedAsiWithChange3 {
+    return '$prevAsi3 ${formattedAsiChangePercent3}';  // 3번째전 지수값 + 변화율
+  }
+
+  String get formattedAsiWithChange7 {
+    return '$prevAsi7 ${formattedAsiChangePercent7}';  // 7번째전 지수값 + 변화율
+  }
+
+
 
   // 기존 헬퍼 메서드들...
   static int _parseToInt(dynamic value) {
@@ -95,10 +126,6 @@ class StockModel {
     return '$symbol${changePercent.toStringAsFixed(2)}%';
   }
 
-  String get formattedCurrentAsi {
-    return currentAsi.toString();
-  }
-
   // 각 기간별 ASI 변화율 포맷
   String get formattedAsiChangePercent1 {
     final symbol = isAsiUp1 ? '+' : (isAsiFlat1 ? '' : '');
@@ -113,19 +140,6 @@ class StockModel {
   String get formattedAsiChangePercent7 {
     final symbol = isAsiUp7 ? '+' : (isAsiFlat7 ? '' : '');
     return '$symbol${asiChangePercent7.toStringAsFixed(1)}%';
-  }
-
-  // 각 기간별 ASI와 변화율을 함께 표시하는 포맷
-  String get formattedAsiWithChange1 {
-    return '$currentAsi ${formattedAsiChangePercent1}';
-  }
-
-  String get formattedAsiWithChange3 {
-    return '$currentAsi ${formattedAsiChangePercent3}';
-  }
-
-  String get formattedAsiWithChange7 {
-    return '$currentAsi ${formattedAsiChangePercent7}';
   }
 
   String get changeSymbol {
