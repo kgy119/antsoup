@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,39 +9,58 @@ import 'app/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'app/bindings/initial_binding.dart';
 import 'core/services/notification_service.dart';
-import 'firebase_options.dart';
 import 'presentation/widgets/common/main_navigation.dart';
 import 'presentation/controllers/main_navigation_controller.dart';
+
+class AppLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        print('앱이 포그라운드로 전환됨');
+        break;
+      case AppLifecycleState.inactive:
+        print('앱이 비활성화됨');
+        break;
+      case AppLifecycleState.paused:
+        print('앱이 백그라운드로 전환됨');
+        break;
+      case AppLifecycleState.detached:
+        print('앱이 종료됨');
+        break;
+      case AppLifecycleState.hidden:
+        print('앱이 숨겨짐');
+        break;
+    }
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  print('=== Firebase 없이 앱 시작 ===');
+
+  // 앱 생명주기 관찰자 추가
+  WidgetsBinding.instance.addObserver(AppLifecycleObserver());
+
+  // Hive 초기화만
   try {
-    // Firebase 초기화
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print('Firebase 초기화 성공');
+    await Hive.initFlutter();
+    print('Hive 초기화 성공');
   } catch (e) {
-    print('Firebase 초기화 실패: $e');
-    // Firebase 초기화 실패시에도 앱은 계속 실행
+    print('Hive 초기화 실패: $e');
   }
 
-
-  // Hive 초기화
-  await Hive.initFlutter();
-
+  // 로컬 알림만 초기화
   try {
-    // 알림 서비스 초기화
     await NotificationService.initialize();
-    print('알림 서비스 초기화 성공');
+    print('로컬 알림 서비스 초기화 성공');
   } catch (e) {
-    print('알림 서비스 초기화 실패: $e');
-    // 알림 서비스 초기화 실패시에도 앱은 계속 실행
+    print('로컬 알림 서비스 초기화 실패: $e');
   }
 
-
-  // 상태바 스타일 설정
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -52,13 +70,13 @@ void main() async {
     ),
   );
 
-  // 세로 모드로 고정
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
   runApp(const AntSoupApp());
+  print('=== Firebase 없이 앱 실행 완료 ===');
 }
 
 class AntSoupApp extends StatelessWidget {
@@ -67,7 +85,7 @@ class AntSoupApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812), // iPhone 12 기준
+      designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
@@ -94,7 +112,6 @@ class AntSoupApp extends StatelessWidget {
     );
   }
 
-  // 저장된 테마 모드 불러오기
   Future<ThemeMode> _getInitialThemeMode() async {
     try {
       final prefs = await SharedPreferences.getInstance();

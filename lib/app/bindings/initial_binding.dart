@@ -10,16 +10,43 @@ import '../../presentation/controllers/theme_controller.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    // 순서 중요: 서비스 먼저 초기화
-    Get.put<ApiService>(ApiService(), permanent: true);
-    Get.put<NotificationService>(NotificationService(), permanent: true);
+    try {
+      // 순서 중요: 서비스 먼저 초기화
+      Get.put<ApiService>(ApiService(), permanent: true);
+      print('ApiService 초기화 완료');
+    } catch (e) {
+      print('ApiService 초기화 실패: $e');
+    }
+
+    try {
+      Get.put<NotificationService>(NotificationService(), permanent: true);
+      print('NotificationService 초기화 완료');
+    } catch (e) {
+      print('NotificationService 초기화 실패: $e');
+    }
 
     // 프로바이더 초기화 (서비스에 의존)
-    Get.put<LocalStorageProvider>(LocalStorageProvider(), permanent: true);
-    Get.put<ApiProvider>(ApiProvider(), permanent: true);
+    try {
+      Get.put<LocalStorageProvider>(LocalStorageProvider(), permanent: true);
+      print('LocalStorageProvider 초기화 완료');
+    } catch (e) {
+      print('LocalStorageProvider 초기화 실패: $e');
+    }
+
+    try {
+      Get.put<ApiProvider>(ApiProvider(), permanent: true);
+      print('ApiProvider 초기화 완료');
+    } catch (e) {
+      print('ApiProvider 초기화 실패: $e');
+    }
 
     // 테마 컨트롤러 초기화
-    Get.put<ThemeController>(ThemeController(), permanent: true);
+    try {
+      Get.put<ThemeController>(ThemeController(), permanent: true);
+      print('ThemeController 초기화 완료');
+    } catch (e) {
+      print('ThemeController 초기화 실패: $e');
+    }
 
     // 초기 설정들 비동기 처리
     _initializeSettings();
@@ -32,9 +59,10 @@ class InitialBinding extends Bindings {
       print('디바이스 ID 초기화 완료');
 
       // 테마 설정 적용
-      final themeController = Get.find<ThemeController>();
-      themeController.applyInitialTheme();
-
+      if (Get.isRegistered<ThemeController>()) {
+        final themeController = Get.find<ThemeController>();
+        themeController.applyInitialTheme();
+      }
     } catch (e) {
       print('초기 설정 실패: $e');
     }
