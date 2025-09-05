@@ -218,4 +218,19 @@ class HomeController extends GetxController {
     //   duration: const Duration(seconds: 1),
     // );
   }
+
+  void goToStockScreen() {
+    // 메인 네비게이션의 종목 탭으로 이동 (인덱스 1)
+    final mainNavController = Get.find<MainNavigationController>();
+    mainNavController.changePage(1);
+
+    // StockController에 전체 종목 로드 신호 전달
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (Get.isRegistered<StockController>()) {
+        final stockController = Get.find<StockController>();
+        stockController.loadAllStocks();
+      }
+    });
+  }
+
 }

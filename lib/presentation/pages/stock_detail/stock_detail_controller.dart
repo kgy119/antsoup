@@ -1,9 +1,12 @@
+// lib/presentation/pages/stock_detail/stock_detail_controller.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../data/models/stock_detail_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
 import '../watchlist/watchlist_controller.dart';
-
 
 class StockDetailController extends GetxController {
   final ApiProvider _apiProvider = Get.find<ApiProvider>();
@@ -25,7 +28,6 @@ class StockDetailController extends GetxController {
   void onInit() {
     super.onInit();
     loadStockDetail();
-    // 관심종목 상태 확인
     _checkWatchlistStatus();
   }
 
@@ -34,80 +36,39 @@ class StockDetailController extends GetxController {
     isWatchlisted.value = localStorage.isInWatchlist(stockCode);
   }
 
-  Future<void> addToWatchlist() async {
-    try {
-      final localStorage = Get.find<LocalStorageProvider>();
-      await localStorage.addToWatchlist(stockCode);
-
-      // WatchlistController가 등록되어 있다면 새로고침
-      if (Get.isRegistered<WatchlistController>()) {
-        Get.find<WatchlistController>().loadWatchlist();
-      }
-
-      Get.snackbar(
-        '완료',
-        '관심종목에 추가되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      print('관심종목 추가 실패: $e');
-      isWatchlisted.value = false;
-      Get.snackbar(
-        '오류',
-        '관심종목 추가에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-  Future<void> removeFromWatchlist() async {
-    try {
-      final localStorage = Get.find<LocalStorageProvider>();
-      await localStorage.removeFromWatchlist(stockCode);
-
-      // WatchlistController가 등록되어 있다면 새로고침
-      if (Get.isRegistered<WatchlistController>()) {
-        Get.find<WatchlistController>().loadWatchlist();
-      }
-
-      Get.snackbar(
-        '완료',
-        '관심종목에서 제거되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      print('관심종목 제거 실패: $e');
-      isWatchlisted.value = true;
-      Get.snackbar(
-        '오류',
-        '관심종목 제거에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-
   Future<void> loadStockDetail() async {
     isLoading.value = true;
     try {
+      print('종목 상세 정보 로드 시작: $stockCode, 기간: ${selectedPeriod.value}');
+
       final detail = await _apiProvider.getStockDetail(
         stockCode,
         period: selectedPeriod.value,
       );
-      stockDetail.value = detail;
+
+      if (detail != null) {
+        stockDetail.value = detail;
+        print('종목 상세 정보 로드 성공: ${detail.name}');
+        print('가격 히스토리: ${detail.priceHistory.length}개');
+        print('ASI 히스토리: ${detail.antSoupIndex.length}개');
+      } else {
+        throw Exception('서버에서 데이터를 받지 못했습니다.');
+      }
+
     } catch (e) {
       print('종목 상세 정보 로딩 실패: $e');
-
-      // API 실패시 더미 데이터 사용
-      stockDetail.value = _generateDummyStockDetail();
-
-      print('더미 데이터 생성 완료: ${stockDetail.value?.priceHistory.length}개 가격 데이터');
-      print('개미탕 지수 데이터: ${stockDetail.value?.antSoupIndex.length}개');
+      stockDetail.value = null;
 
       Get.snackbar(
-        '알림',
-        '서버 연결에 실패하여 더미 데이터를 표시합니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        '오류',
+        '종목 정보를 불러오는데 실패했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red[700],
+        icon: const Icon(Icons.error, color: Colors.red),
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 8.r,
+        duration: const Duration(seconds: 3),
       );
     } finally {
       isLoading.value = false;
@@ -118,243 +79,98 @@ class StockDetailController extends GetxController {
     if (selectedPeriod.value == period) return;
 
     selectedPeriod.value = period;
+    print('기간 변경: $period');
 
     // 새로운 기간으로 데이터 다시 로드
-    isLoading.value = true;
-    try {
-      final detail = await _apiProvider.getStockDetail(
-        stockCode,
-        period: period,
-      );
-      stockDetail.value = detail;
-    } catch (e) {
-      print('차트 데이터 업데이트 실패: $e');
-
-      // API 실패시 더미 데이터 재생성
-      stockDetail.value = _generateDummyStockDetail();
-
-      Get.snackbar(
-        '알림',
-        '서버 연결에 실패하여 더미 데이터를 표시합니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+    await loadStockDetail();
   }
 
   void toggleWatchlist() {
-    isWatchlisted.value = !isWatchlisted.value;
+    final newState = !isWatchlisted.value;
+    isWatchlisted.value = newState;
 
-    // TODO: 관심종목 추가/제거 API 호출
-    if (isWatchlisted.value) {
-      addToWatchlist();
+    if (newState) {
+      _addToWatchlist();
     } else {
-      removeFromWatchlist();
+      _removeFromWatchlist();
+    }
+  }
+
+  Future<void> _addToWatchlist() async {
+    try {
+      final localStorage = Get.find<LocalStorageProvider>();
+      await localStorage.addToWatchlist(stockCode);
+
+      if (Get.isRegistered<WatchlistController>()) {
+        await Get.find<WatchlistController>().loadWatchlist();
+      }
+
+      Get.snackbar(
+        '완료',
+        '관심종목에 추가되었습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green.withOpacity(0.1),
+        colorText: Colors.green[700],
+        icon: const Icon(Icons.star, color: Colors.green),
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 8.r,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      print('관심종목 추가 실패: $e');
+      isWatchlisted.value = false;
+      Get.snackbar(
+        '오류',
+        '관심종목 추가에 실패했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red[700],
+        icon: const Icon(Icons.error, color: Colors.red),
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 8.r,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
+  Future<void> _removeFromWatchlist() async {
+    try {
+      final localStorage = Get.find<LocalStorageProvider>();
+      await localStorage.removeFromWatchlist(stockCode);
+
+      if (Get.isRegistered<WatchlistController>()) {
+        await Get.find<WatchlistController>().loadWatchlist();
+      }
+
+      Get.snackbar(
+        '완료',
+        '관심종목에서 제거되었습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.orange.withOpacity(0.1),
+        colorText: Colors.orange[700],
+        icon: const Icon(Icons.star_border, color: Colors.orange),
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 8.r,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      print('관심종목 제거 실패: $e');
+      isWatchlisted.value = true;
+      Get.snackbar(
+        '오류',
+        '관심종목 제거에 실패했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red[700],
+        icon: const Icon(Icons.error, color: Colors.red),
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 8.r,
+        duration: const Duration(seconds: 2),
+      );
     }
   }
 
   void goBack() {
     Get.back();
-  }
-
-  StockDetailModel _generateDummyStockDetail() {
-    final Map<String, Map<String, dynamic>> stockData = {
-      '005930': {
-        'name': '삼성전자',
-        'currentPrice': 75000,
-        'changeAmount': 1000,
-        'changePercent': 1.35,
-        'volume': 12500000,
-        'marketCap': 4500000000000,
-        'per': 12.5,
-        'pbr': 1.2,
-        // ASI 관련 데이터
-        'currentAsi': 85,
-        'asiChange1': -5,       // 직전 대비 -5 (직전 지수는 90)
-        'asiChangePercent1': -5.6,
-        'asiChange3': -12,      // 3번째전 대비 -12 (3번째전 지수는 97)
-        'asiChangePercent3': -12.4,
-        'asiChange7': 8,        // 7번째전 대비 +8 (7번째전 지수는 77)
-        'asiChangePercent7': 10.4,
-      },
-      '000660': {
-        'name': 'SK하이닉스',
-        'currentPrice': 125000,
-        'changeAmount': -2500,
-        'changePercent': -1.96,
-        'volume': 8500000,
-        'marketCap': 9100000000000,
-        'per': 15.2,
-        'pbr': 1.8,
-        // ASI 관련 데이터
-        'currentAsi': 92,
-        'asiChange1': 3,        // 직전 대비 +3 (직전 지수는 89)
-        'asiChangePercent1': 3.4,
-        'asiChange3': -8,       // 3번째전 대비 -8 (3번째전 지수는 100)
-        'asiChangePercent3': -8.0,
-        'asiChange7': 15,       // 7번째전 대비 +15 (7번째전 지수는 77)
-        'asiChangePercent7': 19.5,
-      },
-      '035420': {
-        'name': 'NAVER',
-        'currentPrice': 185000,
-        'changeAmount': 3500,
-        'changePercent': 1.93,
-        'volume': 950000,
-        'marketCap': 3050000000000,
-        'per': 22.1,
-        'pbr': 2.1,
-        // ASI 관련 데이터
-        'currentAsi': 78,
-        'asiChange1': -2,       // 직전 대비 -2 (직전 지수는 80)
-        'asiChangePercent1': -2.5,
-        'asiChange3': 5,        // 3번째전 대비 +5 (3번째전 지수는 73)
-        'asiChangePercent3': 6.8,
-        'asiChange7': -10,      // 7번째전 대비 -10 (7번째전 지수는 88)
-        'asiChangePercent7': -11.4,
-      },
-    };
-
-    final data = stockData[stockCode] ?? stockData['005930']!;
-
-    return StockDetailModel(
-      code: stockCode,
-      name: data['name'],
-      currentPrice: data['currentPrice'],
-      changeAmount: data['changeAmount'],
-      changePercent: data['changePercent'],
-      volume: data['volume'],
-      marketCap: data['marketCap'],
-      per: data['per'],
-      pbr: data['pbr'],
-      priceHistory: _generatePriceHistory(),
-      antSoupIndex: _generateAntSoupIndex(),
-      // ASI 관련 필드 추가
-      currentAsi: data['currentAsi'],
-      asiChange1: data['asiChange1'],
-      asiChangePercent1: data['asiChangePercent1'],
-      asiChange3: data['asiChange3'],
-      asiChangePercent3: data['asiChangePercent3'],
-      asiChange7: data['asiChange7'],
-      asiChangePercent7: data['asiChangePercent7'],
-    );
-  }
-
-  List<ChartDataPoint> _generatePriceHistory() {
-    final List<ChartDataPoint> data = [];
-    final now = DateTime.now();
-    final basePrice = 75000.0; // 기본 가격
-
-    // 기간에 따른 데이터 포인트 수 결정
-    int dataPoints;
-    int dayInterval;
-
-    switch (selectedPeriod.value) {
-      case '1일':
-        dataPoints = 24; // 시간별
-        dayInterval = 0;
-        break;
-      case '1주':
-        dataPoints = 7;
-        dayInterval = 1;
-        break;
-      case '1개월':
-        dataPoints = 30;
-        dayInterval = 1;
-        break;
-      case '3개월':
-        dataPoints = 90;
-        dayInterval = 1;
-        break;
-      case '6개월':
-        dataPoints = 180;
-        dayInterval = 1;
-        break;
-      case '1년':
-        dataPoints = 365;
-        dayInterval = 1;
-        break;
-      default:
-        dataPoints = 30;
-        dayInterval = 1;
-    }
-
-    for (int i = dataPoints - 1; i >= 0; i--) {
-      DateTime date;
-      if (selectedPeriod.value == '1일') {
-        date = now.subtract(Duration(hours: i));
-      } else {
-        date = now.subtract(Duration(days: i * dayInterval));
-      }
-
-      // 랜덤한 주가 변동 시뮬레이션
-      final random = (i * 17) % 100;
-      final variance = (random - 50) * 0.02; // -2% ~ +2% 변동
-      final price = basePrice * (1 + variance);
-
-      data.add(ChartDataPoint(date: date, value: price));
-    }
-
-    return data;
-  }
-
-  List<ChartDataPoint> _generateAntSoupIndex() {
-    final List<ChartDataPoint> data = [];
-    final now = DateTime.now();
-
-    // 기간에 따른 데이터 포인트 수 결정
-    int dataPoints;
-    int dayInterval;
-
-    switch (selectedPeriod.value) {
-      case '1일':
-        dataPoints = 24;
-        dayInterval = 0;
-        break;
-      case '1주':
-        dataPoints = 7;
-        dayInterval = 1;
-        break;
-      case '1개월':
-        dataPoints = 30;
-        dayInterval = 1;
-        break;
-      case '3개월':
-        dataPoints = 90;
-        dayInterval = 1;
-        break;
-      case '6개월':
-        dataPoints = 180;
-        dayInterval = 1;
-        break;
-      case '1년':
-        dataPoints = 365;
-        dayInterval = 1;
-        break;
-      default:
-        dataPoints = 30;
-        dayInterval = 1;
-    }
-
-    // 개미탕 지수는 0-100 사이의 값
-    for (int i = dataPoints - 1; i >= 0; i--) {
-      DateTime date;
-      if (selectedPeriod.value == '1일') {
-        date = now.subtract(Duration(hours: i));
-      } else {
-        date = now.subtract(Duration(days: i * dayInterval));
-      }
-
-      // 개미탕 지수 시뮬레이션 (주가와 역상관 관계)
-      final random = (i * 23) % 100;
-      final baseIndex = 50.0;
-      final variance = (random - 50) * 0.5; // -25 ~ +25 변동
-      final index = (baseIndex + variance).clamp(0.0, 100.0);
-
-      data.add(ChartDataPoint(date: date, value: index));
-    }
-
-    return data;
   }
 }

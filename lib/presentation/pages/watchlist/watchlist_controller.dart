@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/providers/local_storage_provider.dart';
 import '../../../data/providers/api_provider.dart';
+import '../../controllers/main_navigation_controller.dart';
 
 class WatchlistController extends GetxController {
   final LocalStorageProvider _localStorage = Get.find<LocalStorageProvider>();
@@ -19,17 +20,32 @@ class WatchlistController extends GetxController {
     loadWatchlist();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    // 탭이 활성화될 때마다 새로고침
+    ever(Get.find<MainNavigationController>().currentIndex, (index) {
+      if (index == 2) { // 관심종목 탭 인덱스
+        loadWatchlist();
+      }
+    });
+  }
+
   Future<void> loadWatchlist() async {
+    print('WatchlistController - loadWatchlist 시작');
+
     isLoading.value = true;
     hasError.value = false;
     errorMessage.value = '';
 
     try {
       final stockCodes = _localStorage.getWatchlist();
+      print('WatchlistController - 저장된 종목 코드들: $stockCodes');
 
       if (stockCodes.isEmpty) {
         watchlistStocks.clear();
         notFoundStocks.clear();
+        print('WatchlistController - 저장된 관심종목이 없음');
         return;
       }
 
@@ -74,7 +90,7 @@ class WatchlistController extends GetxController {
       Get.snackbar(
         '완료',
         '관심종목이 새로고침되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -91,7 +107,7 @@ class WatchlistController extends GetxController {
       Get.snackbar(
         '완료',
         '관심종목에서 제거되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
 
     } catch (e) {
@@ -99,7 +115,7 @@ class WatchlistController extends GetxController {
       Get.snackbar(
         '오류',
         '관심종목 제거에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -113,7 +129,7 @@ class WatchlistController extends GetxController {
       Get.snackbar(
         '완료',
         '모든 관심종목이 삭제되었습니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
 
     } catch (e) {
@@ -121,7 +137,7 @@ class WatchlistController extends GetxController {
       Get.snackbar(
         '오류',
         '관심종목 삭제에 실패했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }

@@ -183,6 +183,8 @@ class ApiProvider extends GetxService {
 // 종목 상세 정보 조회
   Future<StockDetailModel?> getStockDetail(String stockCode, {String period = '1개월'}) async {
     try {
+      print('종목 상세 조회 시작: $stockCode, 기간: $period');
+
       final response = await _apiService.get(
         '/stocks/detail.php',
         queryParameters: {
@@ -191,16 +193,20 @@ class ApiProvider extends GetxService {
         },
       );
 
+      print('종목 상세 응답: ${response.data}');
+
       if (response.data['success'] == true) {
-        return StockDetailModel.fromJson(response.data['data']);
+        final data = response.data['data'];
+        return StockDetailModel.fromJson(data);
       } else {
         throw Exception(response.data['message'] ?? '종목 상세 정보 조회 실패');
       }
     } catch (e) {
       print('종목 상세 정보 조회 실패: $e');
-      return null; // null 반환
+      throw e;  // 에러를 다시 던져서 컨트롤러에서 처리하도록
     }
   }
+
 
 
   // FCM 토큰 등록 (디바이스 식별용)
@@ -242,6 +248,69 @@ class ApiProvider extends GetxService {
       );
     } catch (e) {
       throw Exception('관심 종목 제거 실패: $e');
+    }
+  }
+  // 전체 종목 조회 (페이징)
+  Future<List<StockModel>> getAllStocks({int page = 1, int limit = 20}) async {
+    try {
+      print('getAllStocks 호출: page=$page, limit=$limit');
+
+      final response = await _apiService.get(
+        '/stocks/all.php',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      print('API 응답 상태: ${response.statusCode}');
+      print('API 응답 성공 여부: ${response.data['success']}');
+
+      if (response.data['success'] == true) {
+        // 올바른 데이터 구조로 파싱
+        final responseData = response.data['data'] as Map<String, dynamic>;
+        final List<dynamic> stocksData = responseData['stocks'] as List<dynamic>;
+
+        print('받은 종목 데이터 개수: ${stocksData.length}');
+
+        if (stocksData.isNotEmpty) {
+          print('첫 번째 종목: ${stocksData[0]['code']} - ${stocksData[0]['name']}');
+        }
+
+        // 페이징 정보도 확인
+        final paginationData = responseData['pagination'] as Map<String, dynamic>;
+        print('페이징 정보: $paginationData');
+
+        final stocks = stocksData.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+        })).toList();
+
+        print('변환된 StockModel 개수: ${stocks.length}');
+        return stocks;
+
+      } else {
+        throw Exception(response.data['message'] ?? '전체 종목 조회 실패');
+      }
+    } catch (e) {
+      print('전체 종목 조회 오류: $e');
+      print('오류 타입: ${e.runtimeType}');
+
+      // 에러 시 빈 배열 반환
+      return [];
     }
   }
 }

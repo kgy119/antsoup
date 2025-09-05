@@ -74,7 +74,7 @@ class HomePage extends GetView<HomeController> {
 
                 // 인기 종목 섹션
                 SliverToBoxAdapter(
-                  child: _buildSectionHeader('🔥 인기 종목', '더보기'),
+                  child: _buildSectionHeader('🔥 인기 종목', ''),
                 ),
 
                 // 인기 종목 리스트
@@ -128,7 +128,11 @@ class HomePage extends GetView<HomeController> {
 
                 // 개미 관심 종목 섹션
                 SliverToBoxAdapter(
-                  child: _buildSectionHeader('🐜 개미들의 관심종목', '더보기'),
+                  child: _buildSectionHeader(
+                    '🐜 개미들의 관심종목',
+                    '더보기',
+                    onTap: controller.goToStockScreen,
+                  ),
                 ),
 
                 // 개미 관심 종목 리스트
@@ -201,7 +205,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String actionText) {
+  Widget _buildSectionHeader(String title, String actionText, {VoidCallback? onTap}) {
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 12.h),
       child: Row(
@@ -211,11 +215,9 @@ class HomePage extends GetView<HomeController> {
             title,
             style: AppTextStyles.headline6,
           ),
-          if (actionText.isNotEmpty)
+          if (actionText.isNotEmpty && onTap != null)
             GestureDetector(
-              onTap: () {
-                // 더보기 액션
-              },
+              onTap: onTap,
               child: Text(
                 actionText,
                 style: AppTextStyles.bodyText2.copyWith(
@@ -227,6 +229,7 @@ class HomePage extends GetView<HomeController> {
       ),
     );
   }
+
 
   Widget _buildMarketIndexes() {
     return Container(

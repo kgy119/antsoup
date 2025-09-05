@@ -43,22 +43,27 @@ class StockDetailPage extends GetView<StockDetailController> {
 
         final stock = controller.stockDetail.value;
         if (stock == null) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.error_outline,
-                  size: 64,
+                  size: 64.sp,
                   color: Colors.grey,
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 Text(
-                  '종목 정보가 없습니다.',
-                  style: TextStyle(
-                    fontSize: 18,
+                  '종목 정보를 불러올 수 없습니다.',
+                  style: AppTextStyles.bodyText1.copyWith(
                     color: Colors.grey,
                   ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16.h),
+                ElevatedButton(
+                  onPressed: controller.loadStockDetail,
+                  child: const Text('다시 시도'),
                 ),
               ],
             ),
@@ -79,6 +84,7 @@ class StockDetailPage extends GetView<StockDetailController> {
     );
   }
 
+
   Widget _buildPriceSection(stock) {
     final changeColor = stock.isUp ? AppColors.stockUp : stock.isDown ? AppColors.stockDown : Colors.black;
 
@@ -89,14 +95,13 @@ class StockDetailPage extends GetView<StockDetailController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            stock.code,
-            style: AppTextStyles.caption,
-          ),
-          SizedBox(height: 8.h),
+          // 종목코드 삭제됨
+
+          // 현재가, 변화율, ASI 지수를 한 줄에 표시
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // 현재가
               Text(
                 stock.formattedPrice,
                 style: AppTextStyles.headline3.copyWith(
@@ -105,25 +110,10 @@ class StockDetailPage extends GetView<StockDetailController> {
                 ),
               ),
               SizedBox(width: 12.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+              // 가격 변화율 (증감금액 제거)
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        stock.isUp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        color: changeColor,
-                        size: 16.sp,
-                      ),
-                      Text(
-                        '${stock.changeAmount > 0 ? '+' : ''}${stock.changeAmount}',
-                        style: AppTextStyles.bodyText2.copyWith(
-                          color: changeColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
                   Text(
                     '${stock.changePercent > 0 ? '+' : ''}${stock.changePercent.toStringAsFixed(2)}%',
                     style: AppTextStyles.bodyText2.copyWith(
@@ -133,51 +123,52 @@ class StockDetailPage extends GetView<StockDetailController> {
                   ),
                 ],
               ),
-            ],
-          ),
+              SizedBox(width: 12.w),
 
-          // 현재 ASI 지수 표시 추가
-          SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: Theme.of(Get.context!).brightness == Brightness.dark
-                  ? Colors.grey[800]?.withOpacity(0.5)
-                  : Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(
-                color: AppColors.grey300.withOpacity(0.3),
-                width: 1,
+              // ASI 지수 표시
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Theme.of(Get.context!).brightness == Brightness.dark
+                      ? Colors.grey[800]?.withOpacity(0.5)
+                      : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(
+                    color: AppColors.grey300.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'ASI ',
+                      style: AppTextStyles.bodyText2.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(Get.context!).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                      ),
+                    ),
+                    Icon(
+                      Icons.trending_up,
+                      size: 14.sp,
+                      color: AppColors.grey600,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '${stock.currentAsi ?? 0}',
+                      style: AppTextStyles.bodyText2.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(Get.context!).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.trending_up,
-                  size: 16.sp,
-                  color: AppColors.grey600,
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  ' ASI 지수',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  '${stock.currentAsi ?? 0}',
-                  style: AppTextStyles.bodyText1.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(Get.context!).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
 
           // 개미탕 지수 3단계 표시
@@ -507,9 +498,9 @@ class StockDetailPage extends GetView<StockDetailController> {
       if (i < stock.antSoupIndex.length) {
         final antData = stock.antSoupIndex[i];
 
-        // 개미탕 지수를 고정 범위 -40 ~ 240에서 차트 Y축 범위로 매핑
-        const antSoupMin = -40.0;
-        const antSoupMax = 240.0;
+        // 개미탕 지수를 0~200 범위에서 차트 Y축 범위로 매핑 (수정됨)
+        const antSoupMin = 0.0;    // -40에서 0으로 변경
+        const antSoupMax = 200.0;  // 240에서 200으로 변경
 
         // 개미탕 지수 값을 차트 Y축 범위에 매핑
         final normalizedAntValue = (antData.value - antSoupMin) / (antSoupMax - antSoupMin);
@@ -540,11 +531,11 @@ class StockDetailPage extends GetView<StockDetailController> {
               ));
             }
 
-            // 그 다음 개미탕 지수 추가 (빨간색)
+            // 그 다음 개미탕 지수 추가 (빨간색) - 실제 값으로 표시
             if (index < stock.antSoupIndex.length) {
               final antData = stock.antSoupIndex[index];
               items.add(LineTooltipItem(
-                '${antData.value.toStringAsFixed(1)}',
+                'ASI ${antData.value.toStringAsFixed(1)}',  // 툴팁에서 ASI로 표시
                 const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ));
             }
@@ -566,7 +557,6 @@ class StockDetailPage extends GetView<StockDetailController> {
             strokeWidth: 0.5,
           );
         },
-        // 중간선 추가
         drawHorizontalLine: true,
         horizontalInterval: (chartMaxY - chartMinY) / 4,
       ),
@@ -644,20 +634,20 @@ class StockDetailPage extends GetView<StockDetailController> {
             color: AppColors.lightPrimary.withOpacity(0.1),
           ),
         ),
-        // 개미탕 지수 라인 (실선으로 변경, 점선 제거)
+        // 개미탕 지수 라인
         if (antSoupSpots.isNotEmpty)
           LineChartBarData(
             spots: antSoupSpots,
             isCurved: true,
             color: AppColors.stockUp,
-            barWidth: 2.w, // 선 두께를 주가와 동일하게
+            barWidth: 2.w,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
-            // dashArray 제거하여 실선으로 만들기
           ),
       ],
     );
   }
+
 
   Widget _buildStockInfo(stock) {
     return Container(

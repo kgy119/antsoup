@@ -22,10 +22,7 @@ class MainNavigation extends GetView<MainNavigationController> {
 
   @override
   Widget build(BuildContext context) {
-    // 각 페이지의 바인딩을 미리 등록
     _setupBindings();
-
-    // 앱 시작시 저장된 테마 적용
     _applyStoredTheme();
 
     return Scaffold(
@@ -34,14 +31,20 @@ class MainNavigation extends GetView<MainNavigationController> {
         children: const [
           HomePage(),
           StockPage(),
-          WatchlistPage(),  // 차트 대신 관심종목
+          WatchlistPage(),
           CommunityPage(),
         ],
       )),
       bottomNavigationBar: Obx(() => BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: controller.currentIndex.value,
-        onTap: controller.changePage,
+        onTap: (index) {
+          print('네비게이션 탭 클릭: $index');
+          controller.changePage(index);
+
+          // 각 탭별 추가 로직
+          _handleTabChange(index);
+        },
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: AppColors.grey500,
         selectedFontSize: 12.sp,
@@ -71,6 +74,31 @@ class MainNavigation extends GetView<MainNavigationController> {
       )),
     );
   }
+
+  void _handleTabChange(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      switch (index) {
+        case 1: // 종목 탭
+          if (Get.isRegistered<StockController>()) {
+            final stockController = Get.find<StockController>();
+            // 현재 아무 데이터도 없으면 전체 종목 로드
+            if (!stockController.hasSearched.value &&
+                !stockController.showAllStocks.value &&
+                stockController.allStocks.isEmpty) {
+              print('네비게이션에서 종목 탭 선택 - 전체 종목 로드');
+              stockController.loadAllStocks();
+            }
+          }
+          break;
+        case 2: // 관심종목 탭
+          if (Get.isRegistered<WatchlistController>()) {
+            Get.find<WatchlistController>().loadWatchlist();
+          }
+          break;
+      }
+    });
+  }
+
 
   void _setupBindings() {
     // 이미 등록되어 있는지 확인 후 등록
