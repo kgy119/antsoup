@@ -39,7 +39,7 @@ class StockPage extends GetView<StockController> {
               onChanged: controller.onSearchChanged,
               controller: controller.searchController,
               focusNode: controller.searchFocusNode,
-              onSubmitted: controller.onSearchSubmitted,
+              onSubmitted: (value) => controller.onSearchSubmitted(value), // 람다 함수로 감싸기
             ),
 
             // 컨텐츠 영역

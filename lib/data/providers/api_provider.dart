@@ -313,4 +313,82 @@ class ApiProvider extends GetxService {
       return [];
     }
   }
+
+  // 펄펄끓는 개미탕 조회
+  Future<List<StockModel>> getHotAntSoupStocks() async {
+    try {
+      final response = await _apiService.get('/stocks/hot-antsoup.php');
+
+      if (response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          'asi_5_avg': json['asi_5_avg'],
+          'asi_plus_days': json['asi_plus_days'],
+        })).toList();
+      } else {
+        throw Exception(response.data['message'] ?? '펄펄끓는 개미탕 조회 실패');
+      }
+    } catch (e) {
+      print('펄펄끓는 개미탕 조회 실패: $e');
+      return [];
+    }
+  }
+
+  // 식어가는 개미탕 조회
+  Future<List<StockModel>> getColdAntSoupStocks() async {
+    try {
+      final response = await _apiService.get('/stocks/cold-antsoup.php');
+
+      if (response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          'asi_5_avg': json['asi_5_avg'],
+          'asi_minus_days': json['asi_minus_days'],
+        })).toList();
+      } else {
+        throw Exception(response.data['message'] ?? '식어가는 개미탕 조회 실패');
+      }
+    } catch (e) {
+      print('식어가는 개미탕 조회 실패: $e');
+      return [];
+    }
+  }
+
+  // 냉탕온탕 개미탕 조회
+  Future<List<StockModel>> getMixedAntSoupStocks() async {
+    try {
+      final response = await _apiService.get('/stocks/mixed-antsoup.php');
+
+      if (response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => StockModel.fromJson({
+          'code': json['code'],
+          'name': json['name'],
+          'close_price': json['close_price'],
+          'price_change': json['price_change'],
+          'price_change_percent': json['price_change_percent'],
+          'current_asi': json['current_asi'],
+          'asi_5_avg': json['asi_5_avg'],
+          'asi_5_diff': json['asi_5_diff'],
+        })).toList();
+      } else {
+        throw Exception(response.data['message'] ?? '냉탕온탕 개미탕 조회 실패');
+      }
+    } catch (e) {
+      print('냉탕온탕 개미탕 조회 실패: $e');
+      return [];
+    }
+  }
 }

@@ -254,11 +254,10 @@ class StockController extends GetxController {
     currentKeyword.value = query;
   }
 
-  void onSearchSubmitted() {
-    final query = searchController.text.trim();
-    print('검색 제출: $query');
-    if (query.isNotEmpty) {
-      searchStocks(query);
+  void onSearchSubmitted(String value) {
+    print('검색 제출: $value');
+    if (value.isNotEmpty) {
+      searchStocks(value);
     }
   }
 

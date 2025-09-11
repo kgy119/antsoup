@@ -13,7 +13,7 @@ class CustomSearchBar extends StatefulWidget {
   final Widget? suffixIcon;
   final bool readOnly;
   final FocusNode? focusNode;
-  final VoidCallback? onSubmitted;
+  final ValueChanged<String>? onSubmitted; // 이 부분 변경
 
   const CustomSearchBar({
     super.key,
@@ -28,6 +28,7 @@ class CustomSearchBar extends StatefulWidget {
     this.focusNode,
     this.onSubmitted,
   });
+
 
   @override
   State<CustomSearchBar> createState() => _CustomSearchBarState();
@@ -78,7 +79,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
         onTap: widget.onTap,
         onSubmitted: (value) {
           widget.focusNode?.unfocus();
-          widget.onSubmitted?.call(); // 검색어를 파라미터로 전달하지 않고 콜백만 호출
+          widget.onSubmitted?.call(value); // 검색어를 파라미터로 전달
         },
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(

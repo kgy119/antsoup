@@ -1,8 +1,6 @@
-// lib/presentation/pages/home/home_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/stock_model.dart';
-import '../../../data/models/market_index_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
 import '../../controllers/main_navigation_controller.dart';
@@ -15,20 +13,20 @@ class HomeController extends GetxController {
   final searchFocusNode = FocusNode();
 
   final isLoading = false.obs;
-  final isDarkMode = false.obs; // 이 변수를 유지하고 동기화
+  final isDarkMode = false.obs;
   final hasError = false.obs;
   final errorMessage = ''.obs;
-  final popularStocks = <StockModel>[].obs;
-  final antInterestStocks = <StockModel>[].obs;
-  final marketIndexes = <MarketIndexModel>[].obs;
+
+  // 새로운 리스트들
+  final hotAntSoupStocks = <StockModel>[].obs;     // 펄펄끓는 개미탕
+  final coldAntSoupStocks = <StockModel>[].obs;    // 식어가는 개미탕
+  final mixedAntSoupStocks = <StockModel>[].obs;   // 냉탕온탕 개미탕
 
   @override
   void onInit() {
     super.onInit();
-    // 저장된 테마 설정을 즉시 로드
     _initializeThemeSettings();
 
-    // 빌드 완료 후에 테마 적용
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _applyThemeSettings();
     });
@@ -43,12 +41,10 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  // 검색창 포커스 해제 메서드 추가
   void unfocusSearch() {
     searchFocusNode.unfocus();
   }
 
-  // 저장된 테마 설정 즉시 로드 (UI 반영용)
   void _initializeThemeSettings() {
     try {
       final savedThemeMode = _localStorage.getThemeMode();
@@ -56,14 +52,12 @@ class HomeController extends GetxController {
       print('HomeController 테마 설정 로드: ${savedThemeMode ? "다크모드" : "라이트모드"}');
     } catch (e) {
       print('테마 설정 로드 실패: $e');
-      isDarkMode.value = false; // 기본값으로 설정
+      isDarkMode.value = false;
     }
   }
 
-  // 저장된 테마 설정을 GetX에 적용
   void _applyThemeSettings() {
     try {
-      // 현재 테마와 다른 경우에만 변경
       final currentThemeMode = Get.isDarkMode;
       if (currentThemeMode != isDarkMode.value) {
         Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
@@ -74,163 +68,106 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> loadPopularStocks() async {
-    try {
-      final stocks = await _apiProvider.getPopularStocks();
-      popularStocks.value = stocks;
-
-      if (stocks.isEmpty) {
-        print('인기 종목 데이터가 없습니다.');
-      }
-    } catch (e) {
-      print('인기 종목 로딩 실패: $e');
-      popularStocks.value = [];
-    }
-  }
-
-  Future<void> loadAntInterestStocks() async {
-    try {
-      final stocks = await _apiProvider.getAntInterestStocks();
-      antInterestStocks.value = stocks;
-
-      if (stocks.isEmpty) {
-        print('개미 관심 종목 데이터가 없습니다.');
-      }
-    } catch (e) {
-      print('개미 관심 종목 로딩 실패: $e');
-      antInterestStocks.value = [];
-    }
-  }
-
-  Future<void> loadMarketIndexes() async {
-    try {
-      final indexes = await _apiProvider.getMarketIndexes();
-      marketIndexes.value = indexes;
-
-      if (indexes.isEmpty) {
-        print('시장 지수 데이터가 없습니다.');
-      }
-    } catch (e) {
-      print('시장 지수 로딩 실패: $e');
-      marketIndexes.value = [];
-    }
-  }
-
+  // 초기 데이터 로드
   Future<void> loadInitialData() async {
     isLoading.value = true;
     hasError.value = false;
-    errorMessage.value = '';
 
     try {
       await Future.wait([
-        loadPopularStocks(),
-        loadAntInterestStocks(),
-        loadMarketIndexes(),
+        loadHotAntSoupStocks(),
+        loadColdAntSoupStocks(),
+        loadMixedAntSoupStocks(),
       ]);
     } catch (e) {
-      print('데이터 로딩 오류: $e');
+      print('초기 데이터 로딩 실패: $e');
       hasError.value = true;
-      errorMessage.value = '데이터를 불러오는 중 오류가 발생했습니다.';
-
-      Get.snackbar(
-        '오류',
-        '데이터를 불러오는 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      errorMessage.value = '데이터를 불러오는데 실패했습니다.';
     } finally {
       isLoading.value = false;
     }
   }
 
+  // 펄펄끓는 개미탕 로드
+  Future<void> loadHotAntSoupStocks() async {
+    try {
+      final stocks = await _apiProvider.getHotAntSoupStocks();
+      hotAntSoupStocks.value = stocks;
+
+      if (stocks.isEmpty) {
+        print('펄펄끓는 개미탕 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('펄펄끓는 개미탕 로딩 실패: $e');
+      hotAntSoupStocks.value = [];
+    }
+  }
+
+  // 식어가는 개미탕 로드
+  Future<void> loadColdAntSoupStocks() async {
+    try {
+      final stocks = await _apiProvider.getColdAntSoupStocks();
+      coldAntSoupStocks.value = stocks;
+
+      if (stocks.isEmpty) {
+        print('식어가는 개미탕 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('식어가는 개미탕 로딩 실패: $e');
+      coldAntSoupStocks.value = [];
+    }
+  }
+
+  // 냉탕온탕 개미탕 로드
+  Future<void> loadMixedAntSoupStocks() async {
+    try {
+      final stocks = await _apiProvider.getMixedAntSoupStocks();
+      mixedAntSoupStocks.value = stocks;
+
+      if (stocks.isEmpty) {
+        print('냉탕온탕 개미탕 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('냉탕온탕 개미탕 로딩 실패: $e');
+      mixedAntSoupStocks.value = [];
+    }
+  }
+
+  // 데이터 새로고침
   Future<void> refreshData() async {
-    hasError.value = false;
-    errorMessage.value = '';
     await loadInitialData();
   }
 
-  void onSearchChanged(String query) {
-    // if (query.length >= 2) {
-    //   searchStocks(query);
-    // }
-  }
-
+  // 검색 기능 - 매개변수 없는 버전으로 변경
   void onSearchSubmitted() {
-    final query = searchController.text.trim();
-    print('홈에서 검색 제출: $query');
-    if (query.isNotEmpty) {
-      // 메인 네비게이션의 종목 탭으로 이동 (인덱스 1)
-      final mainNavController = Get.find<MainNavigationController>();
-      mainNavController.changePage(1);
+    final value = searchController.text.trim();
+    if (value.isEmpty) return;
 
-      // 약간의 지연 후 검색어 전달
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (Get.isRegistered<StockController>()) {
-          final stockController = Get.find<StockController>();
-          stockController.searchController.text = query;
-          stockController.searchStocks(query);
-        }
-      });
+    // 검색어로 종목 페이지로 이동
+    final navController = Get.find<MainNavigationController>();
+    navController.changePage(1); // 종목 탭으로 이동
 
-      // 검색어를 최근 검색어에 추가
-      _localStorage.addRecentSearch(query);
-      // 검색창 포커스 해제
-      unfocusSearch();
-      // 홈 검색창 클리어
-      searchController.clear();
+    if (Get.isRegistered<StockController>()) {
+      final stockController = Get.find<StockController>();
+      stockController.searchController.text = value;
+      stockController.searchStocks(value); // onSearchSubmitted 대신 searchStocks 직접 호출
     }
   }
 
-
-  Future<void> searchStocks(String keyword) async {
-    // 이 메서드는 더 이상 사용하지 않지만 호환성을 위해 유지
-    try {
-      final results = await _apiProvider.searchStocks(keyword);
-      print('검색 결과: ${results.length}개');
-    } catch (e) {
-      print('검색 실패: $e');
-    }
+  // 종목 상세 페이지로 이동
+  void goToStockDetail(String code) {
+    Get.toNamed('/stock-detail', arguments: {'code': code});
   }
 
-
-  void goToStockDetail(String stockCode) {
-    Get.toNamed('/stock/detail', arguments: {'stockCode': stockCode});
-  }
-
+  // 알림 페이지로 이동
   void goToNotifications() {
-    Get.toNamed('/notification');
+    Get.toNamed('/notifications');
   }
 
-  Future<void> toggleTheme() async {
+  // 테마 모드 토글
+  void toggleTheme() {
     isDarkMode.value = !isDarkMode.value;
-
-    // 테마 변경 적용
     Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
-
-    // 로컬 저장소에 테마 설정 저장
-    await _localStorage.saveThemeMode(isDarkMode.value);
-
-    print('테마 설정 저장 완료: ${isDarkMode.value ? "다크모드" : "라이트모드"}');
-
-    // Get.snackbar(
-    //   '테마 변경',
-    //   '${isDarkMode.value ? "다크" : "라이트"} 모드로 변경되었습니다.',
-    //   snackPosition: SnackPosition.BOTTOM,
-    //   duration: const Duration(seconds: 1),
-    // );
+    _localStorage.saveThemeMode(isDarkMode.value);
   }
-
-  void goToStockScreen() {
-    // 메인 네비게이션의 종목 탭으로 이동 (인덱스 1)
-    final mainNavController = Get.find<MainNavigationController>();
-    mainNavController.changePage(1);
-
-    // StockController에 전체 종목 로드 신호 전달
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (Get.isRegistered<StockController>()) {
-        final stockController = Get.find<StockController>();
-        stockController.loadAllStocks();
-      }
-    });
-  }
-
 }

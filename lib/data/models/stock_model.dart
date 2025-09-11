@@ -23,6 +23,12 @@ class StockModel {
   final int asiChangeAmount7;      // 7번째전 대비 변화량
   final double asiChangePercent7;  // 7번째전 대비 변화율
 
+  // 새로 추가할 필드들
+  final int? asi5Avg;        // 개미탕 평균값
+  final int? asi5Diff;       // 개미탕 편차
+  final int? asiPlusDays;    // 개미탕 100이상 연속일
+  final int? asiMinusDays;   // 개미탕 100이하 연속일
+
   StockModel({
     required this.code,
     required this.name,
@@ -39,6 +45,11 @@ class StockModel {
     required this.asiChangePercent3,
     required this.asiChangeAmount7,
     required this.asiChangePercent7,
+    // 새로 추가
+    this.asi5Avg,
+    this.asi5Diff,
+    this.asiPlusDays,
+    this.asiMinusDays,
   });
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
@@ -60,6 +71,11 @@ class StockModel {
       asiChangePercent3: _parseToDouble(json['asi_change_percent_3'] ?? 0.0),
       asiChangeAmount7: _parseToInt(json['asi_change_7'] ?? 0),
       asiChangePercent7: _parseToDouble(json['asi_change_percent_7'] ?? 0.0),
+      // 새로 추가
+      asi5Avg: json['asi_5_avg'],
+      asi5Diff: json['asi_5_diff'],
+      asiPlusDays: json['asi_plus_days'],
+      asiMinusDays: json['asi_minus_days'],
     );
   }
 
@@ -80,6 +96,26 @@ class StockModel {
   String get formattedAsiWithChange7 {
     return '$prevAsi7 ${formattedAsiChangePercent7}';  // 7번째전 지수값 + 변화율
   }
+
+  // 헬퍼 메서드 추가
+  String? get heatStatus {
+    if (asiPlusDays != null) {
+      if (asiPlusDays! >= 5) return '사골육수';
+      if (asiPlusDays! >= 3) return '가열중';
+    }
+    return null;
+  }
+
+  String? get coldStatus {
+    if (asiMinusDays != null) {
+      if (asiMinusDays! >= 5) return '냉동보관';
+      if (asiMinusDays! >= 3) return '냉각중';
+    }
+    return null;
+  }
+
+  String get formattedAsi5Avg => asi5Avg?.toString() ?? '-';
+  String get formattedAsi5Diff => asi5Diff?.toString() ?? '-';
 
 
 
