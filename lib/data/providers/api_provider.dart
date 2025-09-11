@@ -328,6 +328,18 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+          // 개미탕 평균 및 연속일
           'asi_5_avg': json['asi_5_avg'],
           'asi_plus_days': json['asi_plus_days'],
         })).toList();
@@ -340,7 +352,7 @@ class ApiProvider extends GetxService {
     }
   }
 
-  // 식어가는 개미탕 조회
+// 식어가는 개미탕 조회
   Future<List<StockModel>> getColdAntSoupStocks() async {
     try {
       final response = await _apiService.get('/stocks/cold-antsoup.php');
@@ -354,6 +366,18 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+          // 개미탕 평균 및 연속일
           'asi_5_avg': json['asi_5_avg'],
           'asi_minus_days': json['asi_minus_days'],
         })).toList();
@@ -366,7 +390,7 @@ class ApiProvider extends GetxService {
     }
   }
 
-  // 냉탕온탕 개미탕 조회
+// 냉탕온탕 개미탕 조회
   Future<List<StockModel>> getMixedAntSoupStocks() async {
     try {
       final response = await _apiService.get('/stocks/mixed-antsoup.php');
@@ -380,6 +404,18 @@ class ApiProvider extends GetxService {
           'price_change': json['price_change'],
           'price_change_percent': json['price_change_percent'],
           'current_asi': json['current_asi'],
+          // 기간별 ASI 지수값 추가
+          'prev_asi_1': json['prev_asi_1'],
+          'prev_asi_3': json['prev_asi_3'],
+          'prev_asi_7': json['prev_asi_7'],
+          // 개미탕 지수 비교 데이터 (변화량/변화율)
+          'asi_change_1': json['asi_change_1'],
+          'asi_change_percent_1': json['asi_change_percent_1'],
+          'asi_change_3': json['asi_change_3'],
+          'asi_change_percent_3': json['asi_change_percent_3'],
+          'asi_change_7': json['asi_change_7'],
+          'asi_change_percent_7': json['asi_change_percent_7'],
+          // 개미탕 평균 및 편차
           'asi_5_avg': json['asi_5_avg'],
           'asi_5_diff': json['asi_5_diff'],
         })).toList();

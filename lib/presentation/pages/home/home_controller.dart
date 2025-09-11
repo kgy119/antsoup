@@ -49,10 +49,12 @@ class HomeController extends GetxController {
     try {
       final savedThemeMode = _localStorage.getThemeMode();
       isDarkMode.value = savedThemeMode;
+      update(['themeMode']); // GetBuilder 업데이트
       print('HomeController 테마 설정 로드: ${savedThemeMode ? "다크모드" : "라이트모드"}');
     } catch (e) {
       print('테마 설정 로드 실패: $e');
       isDarkMode.value = false;
+      update(['themeMode']);
     }
   }
 
@@ -72,6 +74,7 @@ class HomeController extends GetxController {
   Future<void> loadInitialData() async {
     isLoading.value = true;
     hasError.value = false;
+    update(['loading', 'error']); // GetBuilder 업데이트
 
     try {
       await Future.wait([
@@ -79,12 +82,16 @@ class HomeController extends GetxController {
         loadColdAntSoupStocks(),
         loadMixedAntSoupStocks(),
       ]);
+      hasError.value = false;
+      update(['error']);
     } catch (e) {
       print('초기 데이터 로딩 실패: $e');
       hasError.value = true;
       errorMessage.value = '데이터를 불러오는데 실패했습니다.';
+      update(['error']);
     } finally {
       isLoading.value = false;
+      update(['loading']);
     }
   }
 
@@ -93,13 +100,17 @@ class HomeController extends GetxController {
     try {
       final stocks = await _apiProvider.getHotAntSoupStocks();
       hotAntSoupStocks.value = stocks;
+      update(['hotAntSoupStocks']); // GetBuilder 업데이트
 
       if (stocks.isEmpty) {
         print('펄펄끓는 개미탕 데이터가 없습니다.');
+      } else {
+        print('펄펄끓는 개미탕 데이터 로드 완료: ${stocks.length}개');
       }
     } catch (e) {
       print('펄펄끓는 개미탕 로딩 실패: $e');
       hotAntSoupStocks.value = [];
+      update(['hotAntSoupStocks']);
     }
   }
 
@@ -108,13 +119,17 @@ class HomeController extends GetxController {
     try {
       final stocks = await _apiProvider.getColdAntSoupStocks();
       coldAntSoupStocks.value = stocks;
+      update(['coldAntSoupStocks']); // GetBuilder 업데이트
 
       if (stocks.isEmpty) {
         print('식어가는 개미탕 데이터가 없습니다.');
+      } else {
+        print('식어가는 개미탕 데이터 로드 완료: ${stocks.length}개');
       }
     } catch (e) {
       print('식어가는 개미탕 로딩 실패: $e');
       coldAntSoupStocks.value = [];
+      update(['coldAntSoupStocks']);
     }
   }
 
@@ -123,19 +138,25 @@ class HomeController extends GetxController {
     try {
       final stocks = await _apiProvider.getMixedAntSoupStocks();
       mixedAntSoupStocks.value = stocks;
+      update(['mixedAntSoupStocks']); // GetBuilder 업데이트
 
       if (stocks.isEmpty) {
         print('냉탕온탕 개미탕 데이터가 없습니다.');
+      } else {
+        print('냉탕온탕 개미탕 데이터 로드 완료: ${stocks.length}개');
       }
     } catch (e) {
       print('냉탕온탕 개미탕 로딩 실패: $e');
       mixedAntSoupStocks.value = [];
+      update(['mixedAntSoupStocks']);
     }
   }
 
   // 데이터 새로고침
   Future<void> refreshData() async {
+    print('홈 데이터 새로고침 시작');
     await loadInitialData();
+    print('홈 데이터 새로고침 완료');
   }
 
   // 검색 기능 - 매개변수 없는 버전으로 변경
@@ -156,7 +177,8 @@ class HomeController extends GetxController {
 
   // 종목 상세 페이지로 이동
   void goToStockDetail(String code) {
-    Get.toNamed('/stock-detail', arguments: {'code': code});
+    print('종목 상세 페이지로 이동: $code');
+    Get.toNamed('/stock/detail', arguments: {'code': code});
   }
 
   // 알림 페이지로 이동
@@ -169,5 +191,6 @@ class HomeController extends GetxController {
     isDarkMode.value = !isDarkMode.value;
     Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
     _localStorage.saveThemeMode(isDarkMode.value);
+    update(['themeMode']); // GetBuilder 업데이트
   }
 }

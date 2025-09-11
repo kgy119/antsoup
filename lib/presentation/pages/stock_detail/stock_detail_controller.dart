@@ -19,7 +19,7 @@ class StockDetailController extends GetxController {
 
   String get stockCode {
     final args = Get.arguments as Map<String, dynamic>?;
-    return args?['stockCode'] ?? '005930';
+    return args?['code'] ?? args?['stockCode'] ?? '005930';
   }
 
   final List<String> periods = ['1일', '1주', '1개월', '3개월', '6개월', '1년'];
