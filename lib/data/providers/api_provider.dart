@@ -250,16 +250,22 @@ class ApiProvider extends GetxService {
       throw Exception('관심 종목 제거 실패: $e');
     }
   }
-  // 전체 종목 조회 (페이징)
-  Future<List<StockModel>> getAllStocks({int page = 1, int limit = 20}) async {
+
+  // getAllStocks 메서드 수정
+  Future<List<StockModel>> getAllStocks({
+    int page = 1,
+    int limit = 20,
+    String? sortBy = 'asi_desc', // 이 줄만 추가
+  }) async {
     try {
-      print('getAllStocks 호출: page=$page, limit=$limit');
+      print('getAllStocks 호출: page=$page, limit=$limit, sortBy=$sortBy'); // 로그도 수정
 
       final response = await _apiService.get(
         '/stocks/all.php',
         queryParameters: {
           'page': page,
           'limit': limit,
+          'sort_by': sortBy, // 이 줄만 추가
         },
       );
 
@@ -267,7 +273,6 @@ class ApiProvider extends GetxService {
       print('API 응답 성공 여부: ${response.data['success']}');
 
       if (response.data['success'] == true) {
-        // 올바른 데이터 구조로 파싱
         final responseData = response.data['data'] as Map<String, dynamic>;
         final List<dynamic> stocksData = responseData['stocks'] as List<dynamic>;
 
@@ -276,10 +281,6 @@ class ApiProvider extends GetxService {
         if (stocksData.isNotEmpty) {
           print('첫 번째 종목: ${stocksData[0]['code']} - ${stocksData[0]['name']}');
         }
-
-        // 페이징 정보도 확인
-        final paginationData = responseData['pagination'] as Map<String, dynamic>;
-        print('페이징 정보: $paginationData');
 
         final stocks = stocksData.map((json) => StockModel.fromJson({
           'code': json['code'],
@@ -306,10 +307,7 @@ class ApiProvider extends GetxService {
         throw Exception(response.data['message'] ?? '전체 종목 조회 실패');
       }
     } catch (e) {
-      print('전체 종목 조회 오류: $e');
-      print('오류 타입: ${e.runtimeType}');
-
-      // 에러 시 빈 배열 반환
+      print('전체 종목 조회 실패: $e');
       return [];
     }
   }

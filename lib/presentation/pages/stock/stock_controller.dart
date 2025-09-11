@@ -1,8 +1,7 @@
-// lib/presentation/pages/stock/stock_controller.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../core/constants/enums.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
@@ -30,6 +29,9 @@ class StockController extends GetxController {
   final showAllStocks = false.obs;
   final currentPage = 1.obs;
   final pageSize = 20;
+
+  // 정렬 관련 변수 추가
+  final Rx<StockSortType> currentSort = StockSortType.asiHighToLow.obs;
 
   @override
   void onInit() {
@@ -98,9 +100,31 @@ class StockController extends GetxController {
     });
   }
 
-  // 전체 종목 로드 (첫 페이지)
+  // 정렬 변경 메서드
+  void changeSortType(StockSortType sortType) {
+    if (currentSort.value != sortType) {
+      currentSort.value = sortType;
+      refreshAllStocks();
+    }
+  }
+
+  // 검색 클리어 메서드
+  void clearSearch() {
+    searchController.clear();
+    searchResults.clear();
+    hasSearched.value = false;
+    currentKeyword.value = '';
+    searchFocusNode.unfocus();
+
+    // 전체 종목이 로드되지 않았다면 로드
+    if (allStocks.isEmpty) {
+      loadAllStocks();
+    }
+  }
+
+  // 전체 종목 로드 (첫 페이지) - 정렬 옵션 포함
   Future<void> loadAllStocks() async {
-    print('전체 종목 로드 시작');
+    print('전체 종목 로드 시작 - 정렬: ${currentSort.value.displayName}');
 
     // 상태 초기화
     showAllStocks.value = true;
@@ -118,6 +142,7 @@ class StockController extends GetxController {
       final stocks = await _apiProvider.getAllStocks(
         page: currentPage.value,
         limit: pageSize,
+        sortBy: currentSort.value.sortKey, // 정렬 옵션 추가
       );
 
       if (stocks.isNotEmpty) {
@@ -141,67 +166,35 @@ class StockController extends GetxController {
         Get.snackbar(
           '알림',
           '표시할 종목이 없습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.amber.withOpacity(0.1),
-          colorText: Colors.amber[700],
-          icon: const Icon(Icons.info, color: Colors.amber),
-          margin: EdgeInsets.all(16.w),
-          borderRadius: 8.r,
-          duration: const Duration(seconds: 2),
+          snackPosition: SnackPosition.BOTTOM,
         );
       }
-
     } catch (e) {
       print('전체 종목 로드 실패: $e');
-
-      allStocks.value = [];
-      hasMoreData.value = false;
+      allStocks.clear();
 
       Get.snackbar(
         '오류',
-        '종목 목록을 불러오는데 실패했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red[700],
-        icon: const Icon(Icons.error, color: Colors.red),
-        margin: EdgeInsets.all(16.w),
-        borderRadius: 8.r,
-        duration: const Duration(seconds: 3),
+        '종목 목록을 불러오는데 실패했습니다: $e',
+        snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoadingAll.value = false;
     }
   }
 
-// clearSearch 메서드 수정 (전체 종목으로 돌아가기)
-  void clearSearch() {
-    print('검색 클리어 - 전체 종목으로 복귀');
-    searchController.clear();
-    searchResults.clear();
-    hasSearched.value = false;
-    currentKeyword.value = '';
-
-    // 전체 종목 모드로 전환
-    if (!showAllStocks.value || allStocks.isEmpty) {
-      loadAllStocks();
-    } else {
-      showAllStocks.value = true;
-    }
-  }
-
-
-// 더 많은 종목 로드 (다음 페이지)
+  // 추가 종목 로드 (무한 스크롤)
   Future<void> loadMoreStocks() async {
-    if (!hasMoreData.value || isLoadingMore.value) return;
+    if (isLoadingMore.value || !hasMoreData.value) return;
 
-    print('다음 페이지 로드 시작: ${currentPage.value + 1}');
-
+    print('추가 종목 로드: ${currentPage.value + 1}페이지');
     isLoadingMore.value = true;
 
     try {
       final stocks = await _apiProvider.getAllStocks(
         page: currentPage.value + 1,
         limit: pageSize,
+        sortBy: currentSort.value.sortKey, // 정렬 옵션 추가
       );
 
       if (stocks.isNotEmpty) {
@@ -211,21 +204,20 @@ class StockController extends GetxController {
         // 받은 데이터가 pageSize보다 적으면 더 이상 데이터가 없음
         if (stocks.length < pageSize) {
           hasMoreData.value = false;
-          print('마지막 페이지 도달');
+          print('모든 데이터 로드 완료');
         }
 
-        print('다음 페이지 로드 완료: ${stocks.length}개 추가, 총 ${allStocks.length}개');
+        print('추가 종목 로드 완료: ${stocks.length}개');
       } else {
         hasMoreData.value = false;
-        print('더 이상 로드할 데이터가 없음');
+        print('더 이상 로드할 종목이 없음');
       }
-
     } catch (e) {
-      print('다음 페이지 로드 실패: $e');
+      print('추가 종목 로드 실패: $e');
 
       Get.snackbar(
         '오류',
-        '추가 데이터를 불러오는데 실패했습니다.',
+        '추가 종목을 불러오는데 실패했습니다: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -233,13 +225,15 @@ class StockController extends GetxController {
     }
   }
 
-  // 새로고침
+  // 새로고침 (정렬 변경시 사용)
   Future<void> refreshAllStocks() async {
+    currentPage.value = 1;
+    hasMoreData.value = true;
     allStocks.clear();
     await loadAllStocks();
   }
 
-  // 기존 메서드들...
+  // 기존 검색 관련 메서드들...
   void loadRecentSearches() {
     try {
       recentSearches.value = _localStorage.getRecentSearches();
