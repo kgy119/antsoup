@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/text_styles.dart';
 import '../../widgets/common/common_widgets.dart';
+import '../../widgets/wordcloud_widget.dart';
 import 'stock_detail_controller.dart';
 
 class StockDetailPage extends GetView<StockDetailController> {
@@ -36,52 +37,102 @@ class StockDetailPage extends GetView<StockDetailController> {
           )),
         ],
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const LoadingWidget(message: '종목 정보를 불러오는 중...');
-        }
+      body: SafeArea(
+        bottom: true, // 하단 네비게이션으로부터 보호
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const LoadingWidget(message: '종목 정보를 불러오는 중...');
+          }
 
-        final stock = controller.stockDetail.value;
-        if (stock == null) {
-          return Center(
+          final stock = controller.stockDetail.value;
+          if (stock == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64.sp,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '종목 정보를 불러올 수 없습니다.',
+                    style: AppTextStyles.bodyText1.copyWith(
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16.h),
+                  ElevatedButton(
+                    onPressed: controller.loadStockDetail,
+                    child: const Text('다시 시도'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 20.h), // 추가 하단 여백
+              child: Column(
+                children: [
+                  _buildPriceSection(stock),
+                  _buildWordCloudSection(),
+                  _buildPeriodSelector(),
+                  _buildChart(),
+                  _buildStockInfo(stock),
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildWordCloudSection() {
+    return Obx(() {
+      print('=== 단어 클라우드 위젯 빌드 ===');
+      print('로딩 상태: ${controller.isLoadingWordCloud.value}');
+      print('데이터 존재: ${controller.wordCloud.value != null}');
+      if (controller.wordCloud.value != null) {
+        print('키워드 수: ${controller.wordCloud.value!.keywords.length}');
+      }
+
+      if (controller.isLoadingWordCloud.value) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          height: 200.h,
+          decoration: BoxDecoration(
+            color: Theme.of(Get.context!).cardColor,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64.sp,
-                  color: Colors.grey,
-                ),
-                SizedBox(height: 16.h),
+                const CircularProgressIndicator(),
+                SizedBox(height: 8.h),
                 Text(
-                  '종목 정보를 불러올 수 없습니다.',
-                  style: AppTextStyles.bodyText1.copyWith(
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: controller.loadStockDetail,
-                  child: const Text('다시 시도'),
+                  '단어 클라우드 로딩 중...',
+                  style: AppTextStyles.caption,
                 ),
               ],
             ),
-          );
-        }
-
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildPriceSection(stock),
-              _buildPeriodSelector(),
-              _buildChart(),
-              _buildStockInfo(stock),
-            ],
           ),
         );
-      }),
-    );
+      }
+
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        child: WordCloudWidget(
+          wordCloud: controller.wordCloud.value,
+          height: 200,
+        ),
+      );
+    });
   }
 
 

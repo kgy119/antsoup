@@ -26,52 +26,57 @@ class MainNavigation extends GetView<MainNavigationController> {
     _applyStoredTheme();
 
     return Scaffold(
-      body: Obx(() => IndexedStack(
-        index: controller.currentIndex.value,
-        children: const [
-          HomePage(),
-          StockPage(),
-          WatchlistPage(),
-          CommunityPage(),
-        ],
-      )),
-      bottomNavigationBar: Obx(() => BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: controller.currentIndex.value,
-        onTap: (index) {
-          print('네비게이션 탭 클릭: $index');
-          controller.changePage(index);
-
-          // 각 탭별 추가 로직
-          _handleTabChange(index);
-        },
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: AppColors.grey500,
-        selectedFontSize: 12.sp,
-        unselectedFontSize: 12.sp,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up_outlined),
-            activeIcon: Icon(Icons.trending_up),
-            label: '종목',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star_outline),
-            activeIcon: Icon(Icons.star),
-            label: '관심종목',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.forum_outlined),
-            activeIcon: Icon(Icons.forum),
-            label: '커뮤니티',
-          ),
-        ],
-      )),
+      body: SafeArea(
+        bottom: false, // BottomNavigationBar 공간 확보를 위해 bottom은 false
+        child: Obx(() => IndexedStack(
+          index: controller.currentIndex.value,
+          children: const [
+            HomePage(),
+            StockPage(),
+            WatchlistPage(),
+            CommunityPage(),
+          ],
+        )),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Obx(() => BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: controller.currentIndex.value,
+          onTap: (index) {
+            print('네비게이션 탭 클릭: $index');
+            controller.changePage(index);
+            _handleTabChange(index);
+          },
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: AppColors.grey500,
+          selectedFontSize: 12.sp,
+          unselectedFontSize: 12.sp,
+          elevation: 8,
+          backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.trending_up_outlined),
+              activeIcon: Icon(Icons.trending_up),
+              label: '종목',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.star_outline),
+              activeIcon: Icon(Icons.star),
+              label: '관심종목',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.forum_outlined),
+              activeIcon: Icon(Icons.forum),
+              label: '커뮤니티',
+            ),
+          ],
+        )),
+      ),
     );
   }
 

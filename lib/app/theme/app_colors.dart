@@ -1,4 +1,7 @@
+// lib/core/constants/app_colors.dart 개선 버전
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class AppColors {
   // 라이트 모드 컬러
@@ -53,4 +56,41 @@ class AppColors {
   static const Color grey700 = Color(0xFF616161);
   static const Color grey800 = Color(0xFF424242);
   static const Color grey900 = Color(0xFF212121);
+
+  // 테마별 동적 색상 getter 추가
+  static Color get primary {
+    return Get.isDarkMode ? darkPrimary : lightPrimary;
+  }
+
+  static Color get primaryVariant {
+    return Get.isDarkMode ? darkPrimaryVariant : lightPrimaryVariant;
+  }
+
+  static Color get secondary {
+    return Get.isDarkMode ? darkSecondary : lightSecondary;
+  }
+
+  static Color get surface {
+    return Get.isDarkMode ? darkSurface : lightSurface;
+  }
+
+  static Color get background {
+    return Get.isDarkMode ? darkBackground : lightBackground;
+  }
+
+  static Color get card {
+    return Get.isDarkMode ? darkCard : lightCard;
+  }
+
+  static Color get onPrimary {
+    return Get.isDarkMode ? darkOnPrimary : lightOnPrimary;
+  }
+
+  static Color get onSurface {
+    return Get.isDarkMode ? darkOnSurface : lightOnSurface;
+  }
+
+  static Color get onBackground {
+    return Get.isDarkMode ? darkOnBackground : lightOnBackground;
+  }
 }

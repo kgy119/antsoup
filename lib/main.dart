@@ -61,14 +61,26 @@ void main() async {
     print('로컬 알림 서비스 초기화 실패: $e');
   }
 
+  // 갤럭시 S24 등 최신 안드로이드 기기 대응
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
+      systemNavigationBarColor: Colors.transparent, // 투명하게 변경
       systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent, // 추가
     ),
   );
+
+  // Edge-to-edge 디스플레이 설정
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge, // 전체 화면 사용
+  );
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

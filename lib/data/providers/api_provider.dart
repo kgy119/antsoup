@@ -3,6 +3,7 @@ import '../../core/services/api_service.dart';
 import '../models/stock_model.dart';
 import '../models/market_index_model.dart';
 import '../models/stock_detail_model.dart';
+import '../models/wordcloud_model.dart';
 
 class ApiProvider extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
@@ -423,6 +424,37 @@ class ApiProvider extends GetxService {
     } catch (e) {
       print('냉탕온탕 개미탕 조회 실패: $e');
       return [];
+    }
+  }
+
+  // 단어 클라우드 조회
+  Future<WordCloudModel?> getWordCloud(String stockCode) async {
+    try {
+      print('단어 클라우드 조회 시작: $stockCode');
+
+      final response = await _apiService.get(
+        '/wordcloud/get.php',
+        queryParameters: {'code': stockCode},
+      );
+
+      print('단어 클라우드 응답: ${response.data}');
+
+      if (response.data != null &&
+          response.data['success'] == true) {
+
+        if (response.data['data'] != null) {
+          return WordCloudModel.fromJson(response.data['data']);
+        } else {
+          print('단어 클라우드 데이터가 null입니다');
+          return null;
+        }
+      } else {
+        print('단어 클라우드 조회 실패: ${response.data['message']}');
+        return null;
+      }
+    } catch (e) {
+      print('단어 클라우드 조회 실패: $e');
+      return null;
     }
   }
 }

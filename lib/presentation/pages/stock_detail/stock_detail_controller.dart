@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../data/models/stock_detail_model.dart';
+import '../../../data/models/wordcloud_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
 import '../watchlist/watchlist_controller.dart';
@@ -17,6 +18,10 @@ class StockDetailController extends GetxController {
   final selectedPeriod = '1개월'.obs;
   final isWatchlisted = false.obs;
 
+  // 단어 클라우드 관련 추가
+  final wordCloud = Rx<WordCloudModel?>(null);
+  final isLoadingWordCloud = false.obs;
+
   String get stockCode {
     final args = Get.arguments as Map<String, dynamic>?;
     return args?['code'] ?? args?['stockCode'] ?? '005930';
@@ -28,6 +33,7 @@ class StockDetailController extends GetxController {
   void onInit() {
     super.onInit();
     loadStockDetail();
+    loadWordCloud(); // 단어 클라우드 로드 추가
     _checkWatchlistStatus();
   }
 
@@ -72,6 +78,29 @@ class StockDetailController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // 단어 클라우드 로드 메서드 추가
+  Future<void> loadWordCloud() async {
+    isLoadingWordCloud.value = true;
+    try {
+      print('단어 클라우드 로드 시작: $stockCode');
+
+      final result = await _apiProvider.getWordCloud(stockCode);
+
+      if (result != null) {
+        wordCloud.value = result;
+        print('단어 클라우드 로드 성공: ${result.keywords.length}개 키워드');
+      } else {
+        print('단어 클라우드 데이터 없음');
+        wordCloud.value = null;
+      }
+    } catch (e) {
+      print('단어 클라우드 로딩 실패: $e');
+      wordCloud.value = null;
+    } finally {
+      isLoadingWordCloud.value = false;
     }
   }
 

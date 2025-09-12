@@ -35,7 +35,6 @@ class StockPage extends GetView<StockController> {
           elevation: 0,
           centerTitle: true,
           actions: [
-            // 검색 상태에 따른 클리어 버튼
             Obx(() => controller.hasSearched.value
                 ? IconButton(
               icon: const Icon(Icons.clear),
@@ -44,78 +43,84 @@ class StockPage extends GetView<StockController> {
                 : const SizedBox.shrink()),
           ],
         ),
-        body: Column(
-          children: [
-            // 검색바
-            Container(
-              padding: EdgeInsets.all(16.w),
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              child: CustomSearchBar(
-                hintText: '종목명, 종목코드를 검색하세요',
-                onChanged: controller.onSearchChanged,
-                controller: controller.searchController,
-                focusNode: controller.searchFocusNode,
-                onSubmitted: (value) => controller.onSearchSubmitted(value),
+        body: SafeArea(
+          bottom: true, // 하단 보호 활성화
+          child: Column(
+            children: [
+              // 검색바 (기존과 동일)
+              Container(
+                padding: EdgeInsets.all(16.w),
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                child: CustomSearchBar(
+                  hintText: '종목명, 종목코드를 검색하세요',
+                  onChanged: controller.onSearchChanged,
+                  controller: controller.searchController,
+                  focusNode: controller.searchFocusNode,
+                  onSubmitted: (value) => controller.onSearchSubmitted(value),
+                ),
               ),
-            ),
 
-            // 정렬 옵션 (검색 상태가 아닐 때만 표시)
-            Obx(() => !controller.hasSearched.value
-                ? Container(
-              padding: EdgeInsets.all(16.w),
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '정렬',
-                    style: AppTextStyles.bodyText1.copyWith(
-                      color: isDark ? Colors.white70 : AppColors.grey700,
-                      fontWeight: FontWeight.w500,
+              // 정렬 옵션 (기존과 동일)
+              Obx(() => !controller.hasSearched.value
+                  ? Container(
+                padding: EdgeInsets.all(16.w),
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '정렬',
+                      style: AppTextStyles.bodyText1.copyWith(
+                        color: isDark ? Colors.white70 : AppColors.grey700,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  SortDropdown(
-                    selectedSort: controller.currentSort.value,
-                    onSortChanged: controller.changeSortType,
-                  ),
-                ],
+                    SortDropdown(
+                      selectedSort: controller.currentSort.value,
+                      onSortChanged: controller.changeSortType,
+                    ),
+                  ],
+                ),
+              )
+                  : const SizedBox.shrink()),
+
+              // 구분선
+              Container(
+                height: 1,
+                color: isDark ? AppColors.grey700 : AppColors.grey200,
               ),
-            )
-                : const SizedBox.shrink()),
 
-            // 구분선
-            Container(
-              height: 1,
-              color: isDark ? AppColors.grey700 : AppColors.grey200,
-            ),
+              // 컨텐츠 영역 - 하단 여백 추가
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 16.h), // 하단 여백 추가
+                  child: Obx(() {
+                    // 로딩 상태
+                    if (controller.isLoading.value) {
+                      return const LoadingWidget(message: '검색 중...');
+                    }
 
-            // 컨텐츠 영역
-            Expanded(
-              child: Obx(() {
-                // 로딩 상태
-                if (controller.isLoading.value) {
-                  return const LoadingWidget(message: '검색 중...');
-                }
+                    if (controller.isLoadingAll.value && controller.allStocks.isEmpty) {
+                      return const LoadingWidget(message: '종목 목록을 불러오는 중...');
+                    }
 
-                if (controller.isLoadingAll.value && controller.allStocks.isEmpty) {
-                  return const LoadingWidget(message: '종목 목록을 불러오는 중...');
-                }
+                    // 검색 결과 표시
+                    if (controller.hasSearched.value) {
+                      return _buildSearchResults(isDark);
+                    }
 
-                // 검색 결과 표시
-                if (controller.hasSearched.value) {
-                  return _buildSearchResults(isDark);
-                }
+                    // 전체 종목 표시
+                    if (controller.showAllStocks.value || controller.allStocks.isNotEmpty) {
+                      return _buildAllStocksList(isDark);
+                    }
 
-                // 전체 종목 표시
-                if (controller.showAllStocks.value || controller.allStocks.isNotEmpty) {
-                  return _buildAllStocksList(isDark);
-                }
-
-                // 초기 상태 - 최근 검색어 또는 전체 종목 로드 유도
-                return _buildInitialState();
-              }),
-            ),
-          ],
+                    // 초기 상태
+                    return _buildInitialState();
+                  }),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
