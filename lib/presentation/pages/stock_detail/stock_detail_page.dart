@@ -101,36 +101,123 @@ class StockDetailPage extends GetView<StockDetailController> {
         print('키워드 수: ${controller.wordCloud.value!.keywords.length}');
       }
 
+      // 로딩 중일 때
       if (controller.isLoadingWordCloud.value) {
         return Container(
           margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          height: 200.h,
+          height: 240.h, // 헤더 포함 높이
           decoration: BoxDecoration(
             color: Theme.of(Get.context!).cardColor,
             borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                SizedBox(height: 8.h),
-                Text(
-                  '단어 클라우드 로딩 중...',
-                  style: AppTextStyles.caption,
+          child: Column(
+            children: [
+              // 로딩 중 헤더
+              Container(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(Get.context!).dividerColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_outlined,
+                      size: 20.sp,
+                      color: Theme.of(Get.context!).primaryColor,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '개미들의 관심 키워드',
+                      style: AppTextStyles.headline6.copyWith(
+                        color: Theme.of(Get.context!).textTheme.titleLarge?.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Theme.of(Get.context!).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 12.w,
+                            height: 12.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(Get.context!).primaryColor,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '로딩중',
+                            style: AppTextStyles.caption.copyWith(
+                              color: Theme.of(Get.context!).primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 로딩 중 내용
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(Get.context!).primaryColor,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        '키워드 분석 중...',
+                        style: AppTextStyles.bodyText2.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '개미들의 관심사를 수집하고 있습니다',
+                        style: AppTextStyles.caption.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       }
 
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        child: WordCloudWidget(
-          wordCloud: controller.wordCloud.value,
-          height: 200,
-        ),
+      // 데이터가 로드된 후 실제 단어 클라우드 표시
+      return WordCloudWidget(
+        wordCloud: controller.wordCloud.value,
+        height: 240,
+        showStats: true,
       );
     });
   }
