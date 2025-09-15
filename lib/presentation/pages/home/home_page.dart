@@ -44,12 +44,71 @@ class HomePage extends GetView<HomeController> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
+                        SizedBox(width: 8.w),
+                        // 실시간 데이터 상태 표시
+                        GetBuilder<HomeController>(
+                          builder: (controller) {
+                            if (controller.hasNaverData) {
+                              return Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                  border: Border.all(
+                                    color: Colors.green.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.circle,
+                                      size: 6.w,
+                                      color: Colors.green,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 9.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Container();
+                          },
+                        ),
                         const Spacer(),
+                        // 실시간 데이터 새로고침 버튼
+                        GetBuilder<HomeController>(
+                          builder: (controller) {
+                            return IconButton(
+                              onPressed: controller.isLoading.value || controller.isNaverDataLoading.value
+                                  ? null
+                                  : () => controller.refreshNaverData(),
+                              icon: AnimatedRotation(
+                                turns: controller.isNaverDataLoading.value ? 1 : 0,
+                                duration: const Duration(milliseconds: 1000),
+                                child: Icon(
+                                  Icons.refresh,
+                                  color: controller.hasNaverData
+                                      ? Colors.green
+                                      : Theme.of(context).iconTheme.color,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                         IconButton(
                           icon: const Icon(Icons.notifications_outlined),
                           onPressed: controller.goToNotifications,
                         ),
-                        // 테마 토글 버튼을 GetBuilder로 변경
+                        // 테마 토글 버튼
                         GetBuilder<HomeController>(
                           id: 'themeMode',
                           builder: (controller) => IconButton(
@@ -77,24 +136,6 @@ class HomePage extends GetView<HomeController> {
                       focusNode: controller.searchFocusNode,
                     ),
                   ),
-                ),
-
-                // 로딩 상태 표시
-                GetBuilder<HomeController>(
-                  id: 'loading',
-                  builder: (controller) {
-                    if (controller.isLoading.value) {
-                      return SliverToBoxAdapter(
-                        child: Container(
-                          height: 200.h,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      );
-                    }
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  },
                 ),
 
                 // 에러 상태 표시
@@ -138,30 +179,24 @@ class HomePage extends GetView<HomeController> {
                 // 식어가는 개미탕 섹션
                 _buildSectionHeader(
                   '식어가는 개미탕 🧊',
-                  '더보기',
-                      () {
-                    // 더보기 액션
-                  },
+                  '',
+                      () {},
                 ),
                 _buildColdAntSoupList(),
 
                 // 냉탕온탕 개미탕 섹션
                 _buildSectionHeader(
                   '냉탕온탕 개미탕 🌊',
-                  '더보기',
-                      () {
-                    // 더보기 액션
-                  },
+                  '',
+                      () {},
                 ),
                 _buildMixedAntSoupList(),
 
                 // 펄펄끓는 개미탕 섹션
                 _buildSectionHeader(
                   '펄펄끓는 개미탕 🔥',
-                  '더보기',
-                      () {
-                    // 더보기 액션
-                  },
+                  '',
+                      () {},
                 ),
                 _buildHotAntSoupList(),
 
@@ -177,7 +212,8 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String actionText, VoidCallback? onTap) {
+  // 섹션 헤더 (단순 제목만 표시)
+  Widget _buildSectionHeader(String title, String actionText, VoidCallback? onTap, {String? sectionType}) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 12.h),
@@ -206,7 +242,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  // 펄펄끓는 개미탕 리스트 - GetBuilder로 변경
+  // 펄펄끓는 개미탕 리스트
   Widget _buildHotAntSoupList() {
     return GetBuilder<HomeController>(
       id: 'hotAntSoupStocks',
@@ -233,19 +269,20 @@ class HomePage extends GetView<HomeController> {
               return AntSoupStockCard(
                 stockName: stock.name,
                 stockCode: stock.code,
-                currentPrice: stock.formattedPrice,
-                priceChangePercent: stock.formattedChangePercent,
+                currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
                 asi5Avg: stock.formattedAsi5Avg,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
-                isUp: stock.isUp,
+                isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
                 statusLabel: stock.heatStatus,
                 statusColor: _getHeatStatusColor(stock.heatStatus),
                 onTap: () => controller.goToStockDetail(stock.code),
+                hasLiveData: stock.hasNaverData,
               );
             },
             childCount: controller.hotAntSoupStocks.length,
@@ -255,7 +292,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  // 식어가는 개미탕 리스트 - GetBuilder로 변경
+  // 식어가는 개미탕 리스트
   Widget _buildColdAntSoupList() {
     return GetBuilder<HomeController>(
       id: 'coldAntSoupStocks',
@@ -282,19 +319,20 @@ class HomePage extends GetView<HomeController> {
               return AntSoupStockCard(
                 stockName: stock.name,
                 stockCode: stock.code,
-                currentPrice: stock.formattedPrice,
-                priceChangePercent: stock.formattedChangePercent,
+                currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
                 asi5Avg: stock.formattedAsi5Avg,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
-                isUp: stock.isUp,
+                isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
                 statusLabel: stock.coldStatus,
                 statusColor: _getColdStatusColor(stock.coldStatus),
                 onTap: () => controller.goToStockDetail(stock.code),
+                hasLiveData: stock.hasNaverData,
               );
             },
             childCount: controller.coldAntSoupStocks.length,
@@ -304,7 +342,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  // 냉탕온탕 개미탕 리스트 - GetBuilder로 변경
+  // 냉탕온탕 개미탕 리스트
   Widget _buildMixedAntSoupList() {
     return GetBuilder<HomeController>(
       id: 'mixedAntSoupStocks',
@@ -331,19 +369,20 @@ class HomePage extends GetView<HomeController> {
               return AntSoupStockCard(
                 stockName: stock.name,
                 stockCode: stock.code,
-                currentPrice: stock.formattedPrice,
-                priceChangePercent: stock.formattedChangePercent,
+                currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
                 asi5Avg: stock.formattedAsi5Avg,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
-                isUp: stock.isUp,
+                isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
-                statusLabel: null, // 냉탕온탕은 특별한 상태 라벨이 없음
+                statusLabel: null,
                 statusColor: null,
                 onTap: () => controller.goToStockDetail(stock.code),
+                hasLiveData: stock.hasNaverData,
               );
             },
             childCount: controller.mixedAntSoupStocks.length,
