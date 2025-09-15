@@ -135,16 +135,6 @@ class HomePage extends GetView<HomeController> {
                   },
                 ),
 
-                // 펄펄끓는 개미탕 섹션
-                _buildSectionHeader(
-                  '펄펄끓는 개미탕 🔥',
-                  '더보기',
-                      () {
-                    // 더보기 액션
-                  },
-                ),
-                _buildHotAntSoupList(),
-
                 // 식어가는 개미탕 섹션
                 _buildSectionHeader(
                   '식어가는 개미탕 🧊',
@@ -164,6 +154,16 @@ class HomePage extends GetView<HomeController> {
                   },
                 ),
                 _buildMixedAntSoupList(),
+
+                // 펄펄끓는 개미탕 섹션
+                _buildSectionHeader(
+                  '펄펄끓는 개미탕 🔥',
+                  '더보기',
+                      () {
+                    // 더보기 액션
+                  },
+                ),
+                _buildHotAntSoupList(),
 
                 // 하단 여백
                 SliverToBoxAdapter(
