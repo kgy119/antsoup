@@ -24,65 +24,69 @@ class StockPage extends GetView<StockController> {
       },
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        appBar: AppBar(
-          title: Text(
-            '종목',
-            style: AppTextStyles.headline6.copyWith(
-              color: isDark ? Colors.white : AppColors.grey900,
-            ),
-          ),
-          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          elevation: 0,
-          centerTitle: true,
-          actions: [
-            Obx(() => controller.hasSearched.value
-                ? IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: controller.clearSearch,
-            )
-                : const SizedBox.shrink()),
-          ],
-        ),
+        // AppBar 완전 제거
         body: SafeArea(
-          bottom: true, // 하단 보호 활성화
+          bottom: true,
           child: Column(
             children: [
-              // 검색바 (기존과 동일)
+              // 검색바와 정렬을 한 줄로 배치
               Container(
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 color: isDark ? AppColors.darkSurface : Colors.white,
-                child: CustomSearchBar(
-                  hintText: '종목명, 종목코드를 검색하세요',
-                  onChanged: controller.onSearchChanged,
-                  controller: controller.searchController,
-                  focusNode: controller.searchFocusNode,
-                  onSubmitted: (value) => controller.onSearchSubmitted(value),
+                child: Row(
+                  children: [
+                    // 검색바 (확장) - margin 없이 사용
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        height: 40.h, // 높이 명시적 지정
+                        child: CustomSearchBar(
+                          hintText: '종목명, 종목코드 검색',
+                          onChanged: controller.onSearchChanged,
+                          controller: controller.searchController,
+                          focusNode: controller.searchFocusNode,
+                          onSubmitted: (value) => controller.onSearchSubmitted(value),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 12.w),
+
+                    // 검색 결과가 있을 때 클리어 버튼
+                    Obx(() => controller.hasSearched.value
+                        ? GestureDetector(
+                      onTap: controller.clearSearch,
+                      child: Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Icon(
+                          Icons.clear,
+                          size: 18.sp,
+                          color: isDark ? Colors.white70 : Colors.grey.shade600,
+                        ),
+                      ),
+                    )
+                        : const SizedBox.shrink()),
+
+                    // 검색 결과가 없을 때만 정렬 옵션 표시
+                    Obx(() => !controller.hasSearched.value
+                        ? Container(
+                      margin: EdgeInsets.only(left: 12.w),
+                      height: 40.h,
+                      child: SortDropdown(
+                        selectedSort: controller.currentSort.value,
+                        onSortChanged: controller.changeSortType,
+                      ),
+                    )
+                        : const SizedBox.shrink()),
+                  ],
                 ),
               ),
 
-              // 정렬 옵션 (기존과 동일)
-              Obx(() => !controller.hasSearched.value
-                  ? Container(
-                padding: EdgeInsets.all(16.w),
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '정렬',
-                      style: AppTextStyles.bodyText1.copyWith(
-                        color: isDark ? Colors.white70 : AppColors.grey700,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SortDropdown(
-                      selectedSort: controller.currentSort.value,
-                      onSortChanged: controller.changeSortType,
-                    ),
-                  ],
-                ),
-              )
-                  : const SizedBox.shrink()),
 
               // 구분선
               Container(
@@ -90,34 +94,21 @@ class StockPage extends GetView<StockController> {
                 color: isDark ? AppColors.grey700 : AppColors.grey200,
               ),
 
-              // 컨텐츠 영역 - 하단 여백 추가
+              // 나머지 콘텐츠는 기존과 동일
               Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 16.h), // 하단 여백 추가
-                  child: Obx(() {
-                    // 로딩 상태
-                    if (controller.isLoading.value) {
-                      return const LoadingWidget(message: '검색 중...');
-                    }
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
 
-                    if (controller.isLoadingAll.value && controller.allStocks.isEmpty) {
-                      return const LoadingWidget(message: '종목 목록을 불러오는 중...');
-                    }
+                  if (controller.hasSearched.value) {
+                    return _buildSearchResults(isDark);
+                  }
 
-                    // 검색 결과 표시
-                    if (controller.hasSearched.value) {
-                      return _buildSearchResults(isDark);
-                    }
-
-                    // 전체 종목 표시
-                    if (controller.showAllStocks.value || controller.allStocks.isNotEmpty) {
-                      return _buildAllStocksList(isDark);
-                    }
-
-                    // 초기 상태
-                    return _buildInitialState();
-                  }),
-                ),
+                  return _buildAllStocksList(isDark);
+                }),
               ),
             ],
           ),

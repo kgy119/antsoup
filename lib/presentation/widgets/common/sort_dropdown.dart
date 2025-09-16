@@ -19,50 +19,40 @@ class SortDropdown extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+      height: 40.h,
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : Colors.white,
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(
-          color: isDark ? AppColors.grey600 : AppColors.grey300,
-          width: 1,
-        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<StockSortType>(
           value: selectedSort,
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: isDark ? Colors.white70 : AppColors.grey600,
-            size: 18.sp,
-          ),
-          style: AppTextStyles.bodyText2.copyWith(
-            color: isDark ? Colors.white : AppColors.grey800,
-            fontSize: 13.sp,
-          ),
-          dropdownColor: isDark ? AppColors.darkCard : Colors.white,
           onChanged: (StockSortType? value) {
             if (value != null) {
               onSortChanged(value);
             }
           },
-          items: StockSortType.values.map<DropdownMenuItem<StockSortType>>(
-                (StockSortType value) {
-              return DropdownMenuItem<StockSortType>(
-                value: value,
-                child: Container(
-                  width: 140.w,
-                  child: Text(
-                    value.displayName,
-                    style: AppTextStyles.bodyText2.copyWith(
-                      color: isDark ? Colors.white : AppColors.grey800,
-                      fontSize: 13.sp,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ).toList(),
+          isDense: true, // 밀도 높게
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 18.sp,
+            color: isDark ? Colors.white70 : Colors.grey.shade600,
+          ),
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 13.sp,
+          ),
+          items: StockSortType.values.map((sortType) {
+            return DropdownMenuItem<StockSortType>(
+              value: sortType,
+              child: Text(
+                sortType.displayName,
+                style: TextStyle(fontSize: 13.sp),
+              ),
+            );
+          }).toList(),
+
         ),
       ),
     );

@@ -126,17 +126,17 @@ class HomePage extends GetView<HomeController> {
                 ),
 
                 // 검색바
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: CustomSearchBar(
-                      hintText: '종목명, 종목코드를 검색하세요',
-                      onSubmitted: (value) => controller.onSearchSubmitted(),
-                      controller: controller.searchController,
-                      focusNode: controller.searchFocusNode,
-                    ),
-                  ),
-                ),
+                // SliverToBoxAdapter(
+                //   child: Padding(
+                //     padding: EdgeInsets.symmetric(horizontal: 16.w),
+                //     child: CustomSearchBar(
+                //       hintText: '종목명, 종목코드를 검색하세요',
+                //       onSubmitted: (value) => controller.onSearchSubmitted(),
+                //       controller: controller.searchController,
+                //       focusNode: controller.searchFocusNode,
+                //     ),
+                //   ),
+                // ),
 
                 // 에러 상태 표시
                 GetBuilder<HomeController>(

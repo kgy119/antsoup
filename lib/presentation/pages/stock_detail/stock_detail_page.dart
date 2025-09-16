@@ -823,7 +823,7 @@ class StockDetailPage extends GetView<StockDetailController> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '개미탕 지수는 해당 종목에 대한 개인투자자들의 관심도와 시장 심리를 나타내는 지표입니다. 0에 가까울수록 매수 심리가 강하고, 100에 가까울수록 매도 심리가 강함을 의미합니다.',
+            '개미탕 지수는 해당 종목에 대한 개인투자자들의 관심도와 시장 심리를 나타내는 지표입니다. 0에 가까울수록 매도 심리가 강하고, 200에 가까울수록 매수 심리가 강함을 의미합니다.',
             style: AppTextStyles.caption.copyWith(
               color: AppColors.grey600,
               height: 1.4,

@@ -64,8 +64,10 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      height: 40.h, // 높이 고정으로 컴팩트하게
       child: TextField(
         controller: widget.controller,
         focusNode: widget.focusNode,
@@ -73,36 +75,50 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
         readOnly: widget.readOnly,
         onChanged: (value) {
           widget.onChanged?.call(value);
-          // 텍스트 상태 즉시 업데이트
           _updateTextState();
         },
         onTap: widget.onTap,
         onSubmitted: (value) {
           widget.focusNode?.unfocus();
-          widget.onSubmitted?.call(value); // 검색어를 파라미터로 전달
+          widget.onSubmitted?.call(value);
         },
         textInputAction: TextInputAction.search,
+        style: TextStyle(
+          fontSize: 14.sp, // 폰트 크기 조정
+          color: isDark ? Colors.white : Colors.black87,
+        ),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          prefixIcon: widget.prefixIcon ?? const Icon(Icons.search),
+          hintStyle: TextStyle(
+            fontSize: 14.sp,
+            color: isDark ? Colors.white54 : Colors.grey.shade600,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            size: 20.sp, // 아이콘 크기 축소
+            color: isDark ? Colors.white54 : Colors.grey.shade600,
+          ),
           suffixIcon: _buildSuffixIcon(),
           filled: true,
-          fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+          fillColor: isDark
+              ? Colors.grey.shade800
+              : Colors.grey.shade100,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(8.r), // 모서리 둥글기 축소
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(8.r),
             borderSide: BorderSide(
               color: Theme.of(context).colorScheme.primary,
-              width: 2,
+              width: 1.5, // 테두리 두께 축소
             ),
           ),
           contentPadding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 12.h,
+            horizontal: 12.w, // 패딩 축소
+            vertical: 8.h,    // 패딩 축소
           ),
+          isDense: true, // 밀도 높게 설정
         ),
       ),
     );
@@ -111,17 +127,22 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   Widget? _buildSuffixIcon() {
     if (widget.suffixIcon != null) return widget.suffixIcon;
 
-    // 텍스트가 있을 때만 X 버튼 표시
     if (_hasText) {
       return IconButton(
-        icon: const Icon(Icons.clear),
+        icon: Icon(
+          Icons.clear,
+          size: 18.sp, // 클리어 아이콘 크기 축소
+        ),
         onPressed: () {
-          // 텍스트만 지우고 포커스와 키보드는 유지
           widget.controller?.clear();
           widget.onChanged?.call('');
-          // 텍스트 상태 업데이트
           _updateTextState();
         },
+        padding: EdgeInsets.all(8.w), // 패딩 축소
+        constraints: BoxConstraints(
+          minWidth: 32.w, // 최소 크기 축소
+          minHeight: 32.h,
+        ),
       );
     }
 

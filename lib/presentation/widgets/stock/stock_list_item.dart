@@ -39,6 +39,7 @@ class StockListItem extends StatelessWidget {
                       color: isDark ? Colors.white : AppColors.grey900,
                     ),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1, // 추가
                   ),
                   SizedBox(height: 4.h),
                   Text(
@@ -63,6 +64,8 @@ class StockListItem extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : AppColors.grey900,
                     ),
+                    overflow: TextOverflow.ellipsis, // 추가
+                    maxLines: 1, // 추가
                   ),
                   SizedBox(height: 4.h),
                   Text(
@@ -71,14 +74,17 @@ class StockListItem extends StatelessWidget {
                       color: _getPriceChangeColor(),
                       fontWeight: FontWeight.w500,
                     ),
+                    overflow: TextOverflow.ellipsis, // 추가
+                    maxLines: 1, // 추가
                   ),
                 ],
               ),
             ),
 
-            SizedBox(width: 12.w),
+            // 간격 축소
+            SizedBox(width: 8.w), // 12.w에서 8.w로 축소
 
-            // ASI 정보 (우측)
+            // ASI 정보 (우측) - flex 값 조정
             Expanded(
               flex: 3,
               child: Column(
@@ -86,7 +92,7 @@ class StockListItem extends StatelessWidget {
                 children: [
                   // 현재 ASI
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h), // 패딩 축소
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.grey700 : AppColors.grey100,
                       borderRadius: BorderRadius.circular(4.r),
@@ -96,19 +102,28 @@ class StockListItem extends StatelessWidget {
                       style: AppTextStyles.caption.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white70 : AppColors.grey700,
+                        fontSize: 9.sp, // 폰트 크기 축소
                       ),
+                      overflow: TextOverflow.ellipsis, // 추가
+                      maxLines: 1, // 추가
                     ),
                   ),
 
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 6.h), // 간격 축소
 
                   // ASI 변화율 (3개 기간)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildAsiItem('직전', stock.formattedAsiChangePercent1, _getAsiChangeColor1()),
-                      _buildAsiItem('3전', stock.formattedAsiChangePercent3, _getAsiChangeColor3()),
-                      _buildAsiItem('7전', stock.formattedAsiChangePercent7, _getAsiChangeColor7()),
+                      Flexible(
+                        child: _buildAsiItem('직전', stock.formattedAsiChangePercent1, _getAsiChangeColor1()),
+                      ),
+                      Flexible(
+                        child: _buildAsiItem('3전', stock.formattedAsiChangePercent3, _getAsiChangeColor3()),
+                      ),
+                      Flexible(
+                        child: _buildAsiItem('7전', stock.formattedAsiChangePercent7, _getAsiChangeColor7()),
+                      ),
                     ],
                   ),
                 ],
@@ -139,10 +154,13 @@ class StockListItem extends StatelessWidget {
             fontSize: 10.sp,
           ),
           textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis, // 추가
+          maxLines: 1, // 추가
         ),
       ],
     );
   }
+
 
   Color _getPriceChangeColor() {
     if (stock.changePercent == 0) return AppColors.grey600;
