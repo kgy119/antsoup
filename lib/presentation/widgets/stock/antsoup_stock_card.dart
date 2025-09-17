@@ -1,7 +1,5 @@
-// lib/presentation/widgets/stock/antsoup_stock_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/text_styles.dart';
 
 class AntSoupStockCard extends StatelessWidget {
