@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/text_styles.dart';
+import '../../../core/constants/app_constants.dart';
 
 // 공통 앱바
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -250,8 +251,13 @@ class StockCard extends StatelessWidget {
 // 로딩 위젯
 class LoadingWidget extends StatelessWidget {
   final String? message;
+  final bool useRandomMessage;
 
-  const LoadingWidget({super.key, this.message});
+  const LoadingWidget({
+    super.key,
+    this.message,
+    this.useRandomMessage = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +271,7 @@ class LoadingWidget extends StatelessWidget {
           if (message != null) ...[
             SizedBox(height: 16.h),
             Text(
-              message!,
+              message ?? (useRandomMessage ? AppConstants.getRandomLoadingMessage() : '로딩 중...'),
               style: AppTextStyles.bodyText2,
             ),
           ],

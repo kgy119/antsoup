@@ -184,39 +184,6 @@ class StockModel {
     return Colors.black;  // 검은색 (회색 대신)
   }
 
-  // 표시용 변동률 포맷팅 (기호 포함)
-  String get formattedDisplayChangePercent {
-    final percent = displayChangePercent;
-
-    if (percent == 0) return '0.00%';
-
-    // 기호 명시적 추가
-    if (percent > 0) {
-      return '+${percent.toStringAsFixed(2)}%';  // 상승: +2.12%
-    } else {
-      return '${percent.toStringAsFixed(2)}%';   // 하락: -1.23% (음수 기호 자동)
-    }
-  }
-
-  // 표시용 변동금액 포맷팅 (기호 포함)
-  String get formattedDisplayChangeAmount {
-    final amount = displayChangeAmount;
-
-    if (amount == 0) return '0';
-
-    final formattedAmount = amount.abs().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-    );
-
-    // 기호 명시적 추가
-    if (amount > 0) {
-      return '+$formattedAmount';  // 상승: +1,000
-    } else {
-      return '-$formattedAmount';  // 하락: -1,000
-    }
-  }
-
   // 디버깅용 정보
   String get debugInfo {
     if (hasNaverData) {
@@ -318,6 +285,55 @@ class StockModel {
   bool get isAsiDown7 => asiChangeAmount7 < 0;
   bool get isAsiFlat7 => asiChangeAmount7 == 0;
 
+  // 헬퍼 메서드 추가
+  String _formatWithSign(num value, {bool isPercentage = false}) {
+    final formatter = NumberFormat('#,###');
+    final suffix = isPercentage ? '%' : '';
+
+    if (value > 0) {
+      final formattedValue = isPercentage ? value.toStringAsFixed(2) : formatter.format(value);
+      return '+$formattedValue$suffix';
+    } else if (value < 0) {
+      final formattedValue = isPercentage ? value.abs().toStringAsFixed(2) : formatter.format(value.abs());
+      return '-$formattedValue$suffix';
+    } else {
+      final formattedValue = isPercentage ? '0.00' : '0';
+      return '$formattedValue$suffix';
+    }
+  }
+
+// 표시용 변동률 포맷팅 (네이버 데이터 우선)
+  String get formattedDisplayChangePercent {
+    return _formatWithSign(displayChangePercent, isPercentage: true);
+  }
+
+// 기존 변동률 포맷팅
+  String get formattedChangePercent {
+    return _formatWithSign(changePercent, isPercentage: true);
+  }
+
+  // 변동금액 포맷팅 (기존 데이터 기준)
+  String get formattedChangeAmount {
+    final formatter = NumberFormat('#,###');
+    final symbol = isUp ? '+' : (isFlat ? '' : '');
+    return '$symbol${formatter.format(changeAmount.abs())}';
+  }
+
+// 표시용 변동금액 포맷팅 (네이버 데이터 우선)
+  String get formattedDisplayChangeAmount {
+    final formatter = NumberFormat('#,###');
+    final amount = displayChangeAmount;
+    final symbol = isDisplayUp ? '+' : (isDisplayFlat ? '' : '-');
+    return '$symbol${formatter.format(amount.abs())}';
+  }
+
+// 변동금액과 변동률을 함께 표시하는 포맷
+  String get formattedChangeWithPercent {
+    final amountText = formattedDisplayChangeAmount;
+    final percentText = formattedDisplayChangePercent;
+    return '$amountText ($percentText)';
+  }
+
   // ===== 포맷팅 메서드들 (업데이트) =====
   String get formattedPrice {
     final formatter = NumberFormat('#,###');
@@ -330,10 +346,6 @@ class StockModel {
     return formatter.format(displayPrice);
   }
 
-  String get formattedChangePercent {
-    final symbol = isUp ? '+' : (isFlat ? '' : '');
-    return '$symbol${changePercent.toStringAsFixed(2)}%';
-  }
 
   // 기존 ASI 변화율 포맷 (그대로 유지)
   String get formattedAsiChangePercent1 {

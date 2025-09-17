@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/enums.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/providers/api_provider.dart';
@@ -124,7 +125,7 @@ class StockController extends GetxController {
 
   // 전체 종목 로드 (첫 페이지) - 정렬 옵션 포함
   Future<void> loadAllStocks() async {
-    print('전체 종목 로드 시작 - 정렬: ${currentSort.value.displayName}');
+    print('전체 종목 로드 시작 - 정렬: ${AppConstants.getRandomLoadingMessage()}');
 
     // 상태 초기화
     showAllStocks.value = true;
@@ -165,7 +166,7 @@ class StockController extends GetxController {
 
         Get.snackbar(
           '알림',
-          '표시할 종목이 없습니다.',
+          AppConstants.networkErrorMessage,
           snackPosition: SnackPosition.BOTTOM,
         );
       }

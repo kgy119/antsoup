@@ -8,6 +8,7 @@ class AntSoupStockCard extends StatelessWidget {
   final String stockName;
   final String stockCode;
   final String currentPrice;
+  final String priceChangeAmount;
   final String priceChangePercent;
   final String asi5Avg;
   final String asiWithChange1;
@@ -29,6 +30,7 @@ class AntSoupStockCard extends StatelessWidget {
     required this.stockName,
     required this.stockCode,
     required this.currentPrice,
+    required this.priceChangeAmount,
     required this.priceChangePercent,
     required this.asi5Avg,
     required this.asiWithChange1,
@@ -158,21 +160,24 @@ class AntSoupStockCard extends StatelessWidget {
                     children: [
                       Text(
                         currentPrice,
-                        style: AppTextStyles.bodyText1.copyWith(
-                          fontWeight: FontWeight.w700,
-                          // 여기에서 isUp 값에 따라 색상 적용
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
                           color: priceColor,
                         ),
                       ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
+
+                      // 변동금액과 변동률을 함께 표시
                       Text(
-                        priceChangePercent,
-                        style: AppTextStyles.caption.copyWith(
-                          // 여기에서 isUp 값에 따라 색상 적용
-                          color: priceColor,
+                        '$priceChangeAmount ($priceChangePercent)',
+                        style: TextStyle(
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w500,
+                          color: priceColor,
                         ),
                       ),
+
                     ],
                   ),
                 ),

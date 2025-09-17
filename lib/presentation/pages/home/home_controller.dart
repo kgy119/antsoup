@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../data/models/stock_model.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/providers/local_storage_provider.dart';
@@ -33,18 +34,20 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    print('HomeController onInit 호출됨');
+
     _initializeThemeSettings();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _applyThemeSettings();
     });
 
-    // 컨트롤러 초기화 시 로딩 상태를 true로 설정
+    // 초기 로딩 상태를 true로 설정하고 데이터 로드
     isLoading.value = true;
     loadInitialData();
-
-    // 실시간 데이터 자동 갱신 시작
     _startRealTimeUpdate();
+
+    print('HomeController onInit 완료');
   }
 
   @override
@@ -84,13 +87,15 @@ class HomeController extends GetxController {
     }
   }
 
-  // 초기 데이터 로드
+  // loadInitialData 메서드에서도 로딩 상태 관리 확실히 하기
   Future<void> loadInitialData() async {
     isLoading.value = true;
     hasError.value = false;
     update(['loading', 'error']);
 
     try {
+      print('초기 데이터 로드 시작...');
+
       // 서버 데이터 먼저 로드
       await Future.wait([
         loadHotAntSoupStocks(),
@@ -98,19 +103,22 @@ class HomeController extends GetxController {
         loadMixedAntSoupStocks(),
       ]);
 
+      print('서버 데이터 로드 완료, 네이버 실시간 데이터 로드 시작...');
+
       // 네이버 실시간 데이터 로드
       await _loadNaverDataForAllStocks();
 
       hasError.value = false;
-      update(['error']);
+      print('모든 초기 데이터 로드 완료');
+
     } catch (e) {
       print('초기 데이터 로딩 실패: $e');
       hasError.value = true;
-      errorMessage.value = '데이터를 불러오는데 실패했습니다.';
-      update(['error']);
+      errorMessage.value = AppConstants.defaultErrorMessage;
     } finally {
       isLoading.value = false;
-      update(['loading']);
+      update(['loading', 'error']);
+      print('초기 로딩 상태 해제');
     }
   }
 
@@ -331,10 +339,13 @@ class HomeController extends GetxController {
 
     Get.snackbar(
       '실시간 데이터 새로고침',
-      '최신 주가 정보를 불러왔습니다',
+      AppConstants.getRandomRefreshMessage(), // AppConstants 사용
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 2),
+      backgroundColor: Colors.green.withOpacity(0.1),
+      colorText: Colors.green[700],
     );
+
   }
 
   // 네이버 데이터 연결 상태 확인

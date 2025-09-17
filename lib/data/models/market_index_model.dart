@@ -50,13 +50,26 @@ class MarketIndexModel {
     return formatter.format(value);
   }
 
+  // lib/data/models/market_index_model.dart
   String get formattedChangeAmount {
     final formatter = NumberFormat('#,##0.00');
-    return formatter.format(changeAmount.abs());
+    if (changeAmount > 0) {
+      return '+${formatter.format(changeAmount)}';
+    } else if (changeAmount < 0) {
+      return '-${formatter.format(changeAmount.abs())}';
+    } else {
+      return '0.00';
+    }
   }
 
   String get formattedChangePercent {
-    return changePercent.abs().toStringAsFixed(2);
+    if (changePercent > 0) {
+      return '+${changePercent.toStringAsFixed(2)}%';
+    } else if (changePercent < 0) {
+      return '-${changePercent.abs().toStringAsFixed(2)}%';
+    } else {
+      return '0.00%';
+    }
   }
 
   String get changeSymbol {

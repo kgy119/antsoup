@@ -53,29 +53,32 @@ class StockListItem extends StatelessWidget {
             ),
 
             // 가격 정보 (중앙)
+            // 가격 정보 (중앙)
             Expanded(
               flex: 2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    stock.formattedPrice,
+                    stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
                     style: AppTextStyles.bodyText1.copyWith(
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : AppColors.grey900,
                     ),
-                    overflow: TextOverflow.ellipsis, // 추가
-                    maxLines: 1, // 추가
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   SizedBox(height: 4.h),
+
+                  // 변동금액과 변동률을 함께 표시
                   Text(
-                    stock.formattedChangePercent,
+                    stock.formattedChangeWithPercent,
                     style: AppTextStyles.caption.copyWith(
                       color: _getPriceChangeColor(),
                       fontWeight: FontWeight.w500,
                     ),
-                    overflow: TextOverflow.ellipsis, // 추가
-                    maxLines: 1, // 추가
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ],
               ),

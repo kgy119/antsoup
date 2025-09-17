@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/text_styles.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../controllers/theme_controller.dart';
 import '../../widgets/common/common_widgets.dart';
 import '../../widgets/common/search_bar.dart';
@@ -24,188 +25,199 @@ class HomePage extends GetView<HomeController> {
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: controller.refreshData,
-            child: CustomScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              slivers: [
-                // 앱바
-                SliverAppBar(
-                  floating: true,
-                  pinned: false,
-                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                  elevation: 0,
-                  flexibleSpace: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Row(
-                      children: [
-                        Text(
-                          '개미탕',
-                          style: AppTextStyles.headline4.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+            child: Obx(() {
+              // 초기 로딩 상태일 때 전체 화면 로딩 표시
+              if (controller.isLoading.value) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                        strokeWidth: 3.0,
+                      ),
+                      SizedBox(height: 24.h),
+
+                      // AppConstants에서 랜덤 로딩 메시지 가져오기
+                      Text(
+                        AppConstants.getRandomLoadingMessage(),
+                        style: AppTextStyles.bodyText1.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        SizedBox(width: 8.w),
-                        // 실시간 데이터 상태 표시
-                        GetBuilder<HomeController>(
-                          builder: (controller) {
-                            if (controller.hasNaverData) {
-                              return Container(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4.r),
-                                  border: Border.all(
-                                    color: Colors.green.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.circle,
-                                      size: 6.w,
-                                      color: Colors.green,
-                                    ),
-                                    SizedBox(width: 4.w),
-                                    Text(
-                                      'LIVE',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 9.sp,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            return Container();
-                          },
+                        textAlign: TextAlign.center,
+                      ),
+
+                      SizedBox(height: 8.h),
+
+                      Text(
+                        '잠시만 기다려 주세요',
+                        style: AppTextStyles.bodyText2.copyWith(
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
                         ),
-                        const Spacer(),
-                        // 실시간 데이터 새로고침 버튼
-                        GetBuilder<HomeController>(
-                          builder: (controller) {
-                            return IconButton(
-                              onPressed: controller.isLoading.value || controller.isNaverDataLoading.value
-                                  ? null
-                                  : () => controller.refreshNaverData(),
-                              icon: AnimatedRotation(
-                                turns: controller.isNaverDataLoading.value ? 1 : 0,
-                                duration: const Duration(milliseconds: 1000),
-                                child: Icon(
-                                  Icons.refresh,
-                                  color: controller.hasNaverData
-                                      ? Colors.green
-                                      : Theme.of(context).iconTheme.color,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.notifications_outlined),
-                          onPressed: controller.goToNotifications,
-                        ),
-                        // 테마 토글 버튼
-                        GetBuilder<HomeController>(
-                          id: 'themeMode',
-                          builder: (controller) => IconButton(
-                            icon: Icon(
-                              controller.isDarkMode.value
-                                  ? Icons.light_mode
-                                  : Icons.dark_mode,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+
+              // 로딩이 완료된 후 정상 컨텐츠 표시
+              return CustomScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                slivers: [
+                  // 앱바
+                  SliverAppBar(
+                    floating: true,
+                    pinned: false,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    elevation: 0,
+                    flexibleSpace: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Row(
+                        children: [
+                          Text(
+                            '개미탕',
+                            style: AppTextStyles.headline4.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            onPressed: controller.toggleTheme,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 8.w),
+
+                          // 실시간 데이터 상태 표시
+                          GetBuilder<HomeController>(
+                            builder: (controller) {
+                              if (controller.hasNaverData) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                    border: Border.all(
+                                      color: Colors.green.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.circle,
+                                        size: 6.w,
+                                        color: Colors.green,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        'LIVE',
+                                        style: TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 9.sp,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              return Container();
+                            },
+                          ),
+                          const Spacer(),
+
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: controller.goToNotifications,
+                          ),
+
+                          // 테마 토글 버튼
+                          GetBuilder<HomeController>(
+                            id: 'themeMode',
+                            builder: (controller) => IconButton(
+                              icon: Icon(
+                                controller.isDarkMode.value
+                                    ? Icons.light_mode
+                                    : Icons.dark_mode,
+                              ),
+                              onPressed: controller.toggleTheme,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                // 검색바
-                // SliverToBoxAdapter(
-                //   child: Padding(
-                //     padding: EdgeInsets.symmetric(horizontal: 16.w),
-                //     child: CustomSearchBar(
-                //       hintText: '종목명, 종목코드를 검색하세요',
-                //       onSubmitted: (value) => controller.onSearchSubmitted(),
-                //       controller: controller.searchController,
-                //       focusNode: controller.searchFocusNode,
-                //     ),
-                //   ),
-                // ),
-
-                // 에러 상태 표시
-                GetBuilder<HomeController>(
-                  id: 'error',
-                  builder: (controller) {
-                    if (controller.hasError.value) {
-                      return SliverToBoxAdapter(
-                        child: Container(
-                          height: 200.h,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  size: 48.sp,
-                                  color: AppColors.error,
-                                ),
-                                SizedBox(height: 16.h),
-                                Text(
-                                  controller.errorMessage.value,
-                                  style: AppTextStyles.bodyText1,
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 16.h),
-                                ElevatedButton(
-                                  onPressed: controller.refreshData,
-                                  child: const Text('다시 시도'),
-                                ),
-                              ],
+                  // 나머지 슬리버들...
+                  // 에러 상태 표시
+                  GetBuilder<HomeController>(
+                    id: 'error',
+                    builder: (controller) {
+                      if (controller.hasError.value) {
+                        return SliverToBoxAdapter(
+                          child: Container(
+                            height: 200.h,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 48.sp,
+                                    color: AppColors.error,
+                                  ),
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    controller.errorMessage.value,
+                                    style: AppTextStyles.bodyText1,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 16.h),
+                                  ElevatedButton(
+                                    onPressed: controller.refreshData,
+                                    child: const Text('다시 시도'),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  },
-                ),
+                        );
+                      }
+                      return const SliverToBoxAdapter(child: SizedBox.shrink());
+                    },
+                  ),
 
-                // 식어가는 개미탕 섹션
-                _buildSectionHeader(
-                  '식어가는 개미탕 🧊',
-                  '',
-                      () {},
-                ),
-                _buildColdAntSoupList(),
+                  // 식어가는 개미탕 섹션
+                  _buildSectionHeader(
+                    '식어가는 개미탕 🧊',
+                    '',
+                        () {},
+                  ),
+                  _buildColdAntSoupList(),
 
-                // 냉탕온탕 개미탕 섹션
-                _buildSectionHeader(
-                  '냉탕온탕 개미탕 🌊',
-                  '',
-                      () {},
-                ),
-                _buildMixedAntSoupList(),
+                  // 냉탕온탕 개미탕 섹션
+                  _buildSectionHeader(
+                    '냉탕온탕 개미탕 🌊',
+                    '',
+                        () {},
+                  ),
+                  _buildMixedAntSoupList(),
 
-                // 펄펄끓는 개미탕 섹션
-                _buildSectionHeader(
-                  '펄펄끓는 개미탕 🔥',
-                  '',
-                      () {},
-                ),
-                _buildHotAntSoupList(),
+                  // 펄펄끓는 개미탕 섹션
+                  _buildSectionHeader(
+                    '펄펄끓는 개미탕 🔥',
+                    '',
+                        () {},
+                  ),
+                  _buildHotAntSoupList(),
 
-                // 하단 여백
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 20.h),
-                ),
-              ],
-            ),
+                  // 하단 여백
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: 20.h),
+                  ),
+                ],
+              );
+            }),
           ),
         ),
       ),
@@ -270,8 +282,9 @@ class HomePage extends GetView<HomeController> {
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
-                asi5Avg: stock.formattedAsi5Avg,
+                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangePercent: stock.formattedDisplayChangePercent,
+                asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
@@ -279,10 +292,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
-                statusLabel: stock.heatStatus,
-                statusColor: _getHeatStatusColor(stock.heatStatus),
-                onTap: () => controller.goToStockDetail(stock.code),
                 hasLiveData: stock.hasNaverData,
+                onTap: () => controller.goToStockDetail(stock.code),
               );
             },
             childCount: controller.hotAntSoupStocks.length,
@@ -320,8 +331,9 @@ class HomePage extends GetView<HomeController> {
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
-                asi5Avg: stock.formattedAsi5Avg,
+                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangePercent: stock.formattedDisplayChangePercent,
+                asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
@@ -329,10 +341,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
-                statusLabel: stock.coldStatus,
-                statusColor: _getColdStatusColor(stock.coldStatus),
-                onTap: () => controller.goToStockDetail(stock.code),
                 hasLiveData: stock.hasNaverData,
+                onTap: () => controller.goToStockDetail(stock.code),
               );
             },
             childCount: controller.coldAntSoupStocks.length,
@@ -370,8 +380,9 @@ class HomePage extends GetView<HomeController> {
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangePercent: stock.hasNaverData ? stock.formattedDisplayChangePercent : stock.formattedChangePercent,
-                asi5Avg: stock.formattedAsi5Avg,
+                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangePercent: stock.formattedDisplayChangePercent,
+                asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
                 asiWithChange3: stock.formattedAsiWithChange3,
                 asiWithChange7: stock.formattedAsiWithChange7,
@@ -379,10 +390,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp1: stock.isAsiUp1,
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
-                statusLabel: null,
-                statusColor: null,
-                onTap: () => controller.goToStockDetail(stock.code),
                 hasLiveData: stock.hasNaverData,
+                onTap: () => controller.goToStockDetail(stock.code),
               );
             },
             childCount: controller.mixedAntSoupStocks.length,
