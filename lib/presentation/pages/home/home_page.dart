@@ -282,7 +282,7 @@ class HomePage extends GetView<HomeController> {
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangeAmount: stock.formattedDisplayChangeAmount,
                 priceChangePercent: stock.formattedDisplayChangePercent,
                 asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
@@ -293,6 +293,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
                 hasLiveData: stock.hasNaverData,
+                statusLabel: stock.heatStatus,  // 추가
+                statusColor: _getHeatStatusColor(stock.heatStatus),  // 추가
                 onTap: () => controller.goToStockDetail(stock.code),
               );
             },
@@ -303,7 +305,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  // 식어가는 개미탕 리스트
+// _buildColdAntSoupList() 메서드 수정
   Widget _buildColdAntSoupList() {
     return GetBuilder<HomeController>(
       id: 'coldAntSoupStocks',
@@ -331,7 +333,7 @@ class HomePage extends GetView<HomeController> {
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangeAmount: stock.formattedDisplayChangeAmount,
                 priceChangePercent: stock.formattedDisplayChangePercent,
                 asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
@@ -342,6 +344,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
                 hasLiveData: stock.hasNaverData,
+                statusLabel: stock.coldStatus,  // 추가
+                statusColor: _getColdStatusColor(stock.coldStatus),  // 추가
                 onTap: () => controller.goToStockDetail(stock.code),
               );
             },
@@ -352,7 +356,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  // 냉탕온탕 개미탕 리스트
+// _buildMixedAntSoupList() 메서드 수정
   Widget _buildMixedAntSoupList() {
     return GetBuilder<HomeController>(
       id: 'mixedAntSoupStocks',
@@ -376,11 +380,19 @@ class HomePage extends GetView<HomeController> {
           delegate: SliverChildBuilderDelegate(
                 (context, index) {
               final stock = controller.mixedAntSoupStocks[index];
+              // 혼합탕에서는 가열/냉각 상태를 모두 확인해서 표시
+              final heatStatus = stock.heatStatus;
+              final coldStatus = stock.coldStatus;
+              final statusLabel = heatStatus ?? coldStatus;
+              final statusColor = heatStatus != null
+                  ? _getHeatStatusColor(heatStatus)
+                  : _getColdStatusColor(coldStatus);
+
               return AntSoupStockCard(
                 stockName: stock.name,
                 stockCode: stock.code,
                 currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
-                priceChangeAmount: stock.formattedDisplayChangeAmount,  // 변동금액 추가
+                priceChangeAmount: stock.formattedDisplayChangeAmount,
                 priceChangePercent: stock.formattedDisplayChangePercent,
                 asi5Avg: stock.formattedCurrentAsi,
                 asiWithChange1: stock.formattedAsiWithChange1,
@@ -391,6 +403,8 @@ class HomePage extends GetView<HomeController> {
                 isAsiUp3: stock.isAsiUp3,
                 isAsiUp7: stock.isAsiUp7,
                 hasLiveData: stock.hasNaverData,
+                statusLabel: statusLabel,  // 추가
+                statusColor: statusColor,  // 추가
                 onTap: () => controller.goToStockDetail(stock.code),
               );
             },
@@ -400,6 +414,7 @@ class HomePage extends GetView<HomeController> {
       },
     );
   }
+
 
   // 가열 상태 색상
   Color? _getHeatStatusColor(String? status) {
