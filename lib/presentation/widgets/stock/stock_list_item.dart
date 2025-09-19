@@ -32,15 +32,62 @@ class StockListItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 종목명
-                  Text(
-                    stock.name,
-                    style: AppTextStyles.bodyText1.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.grey900,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  // 종목명과 상태 라벨
+                  Row(
+                    children: [
+                      // 기존 종목명
+                      Flexible(
+                        child: Text(
+                          stock.name,
+                          style: AppTextStyles.bodyText1.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : AppColors.grey900,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+
+                      // 가열 상태 라벨 추가
+                      if (stock.heatStatus != null) ...[
+                        SizedBox(width: 6.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                          decoration: BoxDecoration(
+                            color: _getHeatStatusColor(stock.heatStatus),
+                            borderRadius: BorderRadius.circular(3.r),
+                          ),
+                          child: Text(
+                            stock.heatStatus!,
+                            style: AppTextStyles.caption.copyWith(
+                              color: Colors.white,
+                              fontSize: 8.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // 냉각 상태 라벨 추가
+                      if (stock.coldStatus != null) ...[
+                        SizedBox(width: 6.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                          decoration: BoxDecoration(
+                            color: _getColdStatusColor(stock.coldStatus),
+                            borderRadius: BorderRadius.circular(3.r),
+                          ),
+                          child: Text(
+                            stock.coldStatus!,
+                            style: AppTextStyles.caption.copyWith(
+                              color: Colors.white,
+                              fontSize: 8.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   SizedBox(height: 4.h),
 
@@ -252,6 +299,32 @@ class StockListItem extends StatelessWidget {
       if (stock.changeAmount > 0) return AppColors.stockUp;
       if (stock.changeAmount < 0) return AppColors.stockDown;
       return AppColors.grey600;
+    }
+  }
+
+  // 가열 상태 색상
+  Color? _getHeatStatusColor(String? status) {
+    if (status == null) return null;
+    switch (status) {
+      case '사골육수':
+        return Colors.red[700];
+      case '가열중':
+        return Colors.orange[700];
+      default:
+        return Colors.grey[600];
+    }
+  }
+
+  // 냉각 상태 색상
+  Color? _getColdStatusColor(String? status) {
+    if (status == null) return null;
+    switch (status) {
+      case '냉동보관':
+        return Colors.blue[700];
+      case '냉각중':
+        return Colors.cyan[700];
+      default:
+        return Colors.grey[600];
     }
   }
 

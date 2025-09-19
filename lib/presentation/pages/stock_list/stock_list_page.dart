@@ -6,7 +6,7 @@ import '../../../app/theme/text_styles.dart';
 import '../../../core/constants/enums.dart';
 import '../../controllers/stock_list_controller.dart';
 import '../../widgets/common/sort_dropdown.dart';
-import '../../widgets/stock/stock_list_item.dart';
+import '../../widgets/stock/antsoup_stock_card.dart'; // 수정된 import
 
 class StockListPage extends GetView<StockListController> {
   const StockListPage({Key? key}) : super(key: key);
@@ -80,28 +80,53 @@ class StockListPage extends GetView<StockListController> {
 
               return RefreshIndicator(
                 onRefresh: controller.refreshStocks,
-                child: ListView.separated(
+                child: ListView.builder(
                   padding: EdgeInsets.symmetric(vertical: 8.h),
                   itemCount: controller.stocks.length +
                       (controller.hasMore.value ? 1 : 0),
-                  separatorBuilder: (context, index) => Container(
-                    height: 1,
-                    margin: EdgeInsets.symmetric(horizontal: 16.w),
-                    color: isDark ? AppColors.grey700 : AppColors.grey200,
-                  ),
                   itemBuilder: (context, index) {
                     if (index == controller.stocks.length) {
-                      // 로딩 인디케이터
-                      controller.loadStocks();
-                      return Container(
-                        padding: EdgeInsets.all(16.h),
-                        alignment: Alignment.center,
-                        child: const CircularProgressIndicator(),
-                      );
+                      // 로딩 인디케이터 또는 완료 메시지
+                      if (controller.isLoading.value) {
+                        return Container(
+                          padding: EdgeInsets.all(16.h),
+                          alignment: Alignment.center,
+                          child: const CircularProgressIndicator(),
+                        );
+                      } else {
+                        return Container(
+                          padding: EdgeInsets.all(16.h),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '모든 종목을 불러왔습니다',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.grey600,
+                            ),
+                          ),
+                        );
+                      }
                     }
 
                     final stock = controller.stocks[index];
-                    return  StockListItem(stock: stock);
+                    return AntSoupStockCard(
+                      stockName: stock.name,
+                      stockCode: stock.code,
+                      currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+                      priceChangeAmount: stock.formattedDisplayChangeAmount,
+                      priceChangePercent: stock.formattedDisplayChangePercent,
+                      asi5Avg: stock.formattedCurrentAsi,
+                      asiWithChange1: stock.formattedAsiWithChange1,
+                      asiWithChange3: stock.formattedAsiWithChange3,
+                      asiWithChange7: stock.formattedAsiWithChange7,
+                      isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
+                      isAsiUp1: stock.isAsiUp1,
+                      isAsiUp3: stock.isAsiUp3,
+                      isAsiUp7: stock.isAsiUp7,
+                      hasLiveData: stock.hasNaverData,
+                      statusLabel: stock.heatStatus ?? stock.coldStatus, // 상태 라벨 추가
+                      statusColor: _getStatusColor(stock.heatStatus, stock.coldStatus), // 상태 색상 추가
+                      onTap: () => controller.goToStockDetail(stock.code),
+                    );
                   },
                 ),
               );
@@ -110,5 +135,32 @@ class StockListPage extends GetView<StockListController> {
         ],
       ),
     );
+  }
+
+  // 상태에 따른 색상 반환 (가열/냉각 상태)
+  Color? _getStatusColor(String? heatStatus, String? coldStatus) {
+    if (heatStatus != null) {
+      switch (heatStatus) {
+        case '사골육수':
+          return Colors.red[700];
+        case '가열중':
+          return Colors.orange[700];
+        default:
+          return null;
+      }
+    }
+
+    if (coldStatus != null) {
+      switch (coldStatus) {
+        case '냉동보관':
+          return Colors.blue[700];
+        case '냉각중':
+          return Colors.cyan[700];
+        default:
+          return null;
+      }
+    }
+
+    return null;
   }
 }

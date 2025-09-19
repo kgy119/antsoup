@@ -7,6 +7,7 @@ import '../../../core/constants/enums.dart';
 import '../../widgets/common/common_widgets.dart';
 import '../../widgets/common/search_bar.dart';
 import '../../widgets/common/sort_dropdown.dart';
+import '../../widgets/stock/antsoup_stock_card.dart';
 import '../../widgets/stock/stock_list_item.dart';
 import 'stock_controller.dart';
 
@@ -118,11 +119,18 @@ class StockPage extends GetView<StockController> {
   }
 
   // 검색 결과 위젯
+  // _buildSearchResults 메서드 수정
   Widget _buildSearchResults(bool isDark) {
     return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
       if (controller.searchResults.isEmpty) {
         return EmptyWidget(
-          message: '"${controller.currentKeyword.value}"에 대한 검색 결과가 없습니다.',
+          message: controller.currentKeyword.value.isEmpty
+              ? '검색어를 입력해주세요'
+              : '"${controller.currentKeyword.value}" 검색 결과가 없습니다',
           icon: Icons.search_off,
         );
       }
@@ -141,19 +149,29 @@ class StockPage extends GetView<StockController> {
             ),
           ),
 
-          // 검색 결과 리스트
+          // 검색 결과 리스트 (AntSoupStockCard 사용)
           Expanded(
-            child: ListView.separated(
+            child: ListView.builder(
               itemCount: controller.searchResults.length,
-              separatorBuilder: (context, index) => Container(
-                height: 1,
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-                color: isDark ? AppColors.grey700 : AppColors.grey200,
-              ),
               itemBuilder: (context, index) {
                 final stock = controller.searchResults[index];
-                return StockListItem(
-                  stock: stock,
+                return AntSoupStockCard(
+                  stockName: stock.name,
+                  stockCode: stock.code,
+                  currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+                  priceChangeAmount: stock.formattedDisplayChangeAmount,
+                  priceChangePercent: stock.formattedDisplayChangePercent,
+                  asi5Avg: stock.formattedCurrentAsi,
+                  asiWithChange1: stock.formattedAsiWithChange1,
+                  asiWithChange3: stock.formattedAsiWithChange3,
+                  asiWithChange7: stock.formattedAsiWithChange7,
+                  isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
+                  isAsiUp1: stock.isAsiUp1,
+                  isAsiUp3: stock.isAsiUp3,
+                  isAsiUp7: stock.isAsiUp7,
+                  hasLiveData: stock.hasNaverData,
+                  statusLabel: stock.heatStatus ?? stock.coldStatus, // 상태 라벨 추가
+                  statusColor: _getStatusColor(stock.heatStatus, stock.coldStatus), // 상태 색상 추가
                   onTap: () => controller.goToStockDetail(stock.code),
                 );
               },
@@ -164,7 +182,7 @@ class StockPage extends GetView<StockController> {
     });
   }
 
-  // 전체 종목 리스트 위젯
+// _buildAllStocksList 메서드 수정
   Widget _buildAllStocksList(bool isDark) {
     return Obx(() {
       if (controller.allStocks.isEmpty) {
@@ -196,16 +214,11 @@ class StockPage extends GetView<StockController> {
 
       return RefreshIndicator(
         onRefresh: controller.refreshAllStocks,
-        child: ListView.separated(
+        child: ListView.builder(
           controller: controller.scrollController,
           padding: EdgeInsets.symmetric(vertical: 8.h),
           itemCount: controller.allStocks.length +
               (controller.hasMoreData.value ? 1 : 0),
-          separatorBuilder: (context, index) => Container(
-            height: 1,
-            margin: EdgeInsets.symmetric(horizontal: 16.w),
-            color: isDark ? AppColors.grey700 : AppColors.grey200,
-          ),
           itemBuilder: (context, index) {
             if (index == controller.allStocks.length) {
               // 로딩 인디케이터
@@ -230,8 +243,23 @@ class StockPage extends GetView<StockController> {
             }
 
             final stock = controller.allStocks[index];
-            return StockListItem(
-              stock: stock,
+            return AntSoupStockCard(
+              stockName: stock.name,
+              stockCode: stock.code,
+              currentPrice: stock.hasNaverData ? stock.formattedDisplayPrice : stock.formattedPrice,
+              priceChangeAmount: stock.formattedDisplayChangeAmount,
+              priceChangePercent: stock.formattedDisplayChangePercent,
+              asi5Avg: stock.formattedCurrentAsi,
+              asiWithChange1: stock.formattedAsiWithChange1,
+              asiWithChange3: stock.formattedAsiWithChange3,
+              asiWithChange7: stock.formattedAsiWithChange7,
+              isUp: stock.hasNaverData ? stock.isDisplayUp : stock.isUp,
+              isAsiUp1: stock.isAsiUp1,
+              isAsiUp3: stock.isAsiUp3,
+              isAsiUp7: stock.isAsiUp7,
+              hasLiveData: stock.hasNaverData,
+              statusLabel: stock.heatStatus ?? stock.coldStatus, // 상태 라벨 추가
+              statusColor: _getStatusColor(stock.heatStatus, stock.coldStatus), // 상태 색상 추가
               onTap: () => controller.goToStockDetail(stock.code),
             );
           },
@@ -328,5 +356,32 @@ class StockPage extends GetView<StockController> {
         ),
       );
     });
+  }
+
+  // 상태에 따른 색상 반환 (가열/냉각 상태)
+  Color? _getStatusColor(String? heatStatus, String? coldStatus) {
+    if (heatStatus != null) {
+      switch (heatStatus) {
+        case '사골육수':
+          return Colors.red[700];
+        case '가열중':
+          return Colors.orange[700];
+        default:
+          return null;
+      }
+    }
+
+    if (coldStatus != null) {
+      switch (coldStatus) {
+        case '냉동보관':
+          return Colors.blue[700];
+        case '냉각중':
+          return Colors.cyan[700];
+        default:
+          return null;
+      }
+    }
+
+    return null;
   }
 }

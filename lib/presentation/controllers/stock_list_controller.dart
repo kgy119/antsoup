@@ -69,4 +69,11 @@ class StockListController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // 종목 상세 페이지로 이동
+  void goToStockDetail(String stockCode) {
+    Get.toNamed('/stock_detail', arguments: {
+      'stockCode': stockCode,
+    });
+  }
 }

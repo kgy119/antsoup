@@ -154,6 +154,10 @@ class ApiProvider extends GetxService {
           'asi_change_percent_3': json['asi_change_percent_3'],
           'asi_change_7': json['asi_change_7'],
           'asi_change_percent_7': json['asi_change_percent_7'],
+          // 상태 계산용 필드 추가
+          'asi_5_avg': json['asi_5_avg'],
+          'asi_plus_days': json['asi_plus_days'],
+          'asi_minus_days': json['asi_minus_days'],
         })).toList();
       } else {
         throw Exception(response.data['message'] ?? '종목 검색 실패');
@@ -256,17 +260,17 @@ class ApiProvider extends GetxService {
   Future<List<StockModel>> getAllStocks({
     int page = 1,
     int limit = 20,
-    String? sortBy = 'asi_desc', // 이 줄만 추가
+    String? sortBy = 'asi_desc',
   }) async {
     try {
-      print('getAllStocks 호출: page=$page, limit=$limit, sortBy=$sortBy'); // 로그도 수정
+      print('getAllStocks 호출: page=$page, limit=$limit, sortBy=$sortBy');
 
       final response = await _apiService.get(
         '/stocks/all.php',
         queryParameters: {
           'page': page,
           'limit': limit,
-          'sort_by': sortBy, // 이 줄만 추가
+          'sort_by': sortBy,
         },
       );
 
@@ -299,6 +303,10 @@ class ApiProvider extends GetxService {
           'asi_change_percent_3': json['asi_change_percent_3'],
           'asi_change_7': json['asi_change_7'],
           'asi_change_percent_7': json['asi_change_percent_7'],
+          // 상태 계산용 필드 추가
+          'asi_5_avg': json['asi_5_avg'],
+          'asi_plus_days': json['asi_plus_days'],
+          'asi_minus_days': json['asi_minus_days'],
         })).toList();
 
         print('변환된 StockModel 개수: ${stocks.length}');
@@ -312,6 +320,7 @@ class ApiProvider extends GetxService {
       return [];
     }
   }
+
 
   // 펄펄끓는 개미탕 조회
   Future<List<StockModel>> getHotAntSoupStocks() async {
