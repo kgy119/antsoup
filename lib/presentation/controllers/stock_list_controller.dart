@@ -22,25 +22,38 @@ class StockListController extends GetxController {
     loadStocks();
   }
 
-  // 정렬 변경 메서드
+  // 특별한 개미탕 필터인지 확인하는 헬퍼 메서드 추가
+  bool _isSpecialAntSoupFilter(StockSortType sortType) {
+    return sortType == StockSortType.coldAntSoup ||
+        sortType == StockSortType.mixedAntSoup ||
+        sortType == StockSortType.hotAntSoup;
+  }
+
+// 정렬 변경 메서드 수정
   void changeSortType(StockSortType sortType) {
     if (currentSort.value != sortType) {
       currentSort.value = sortType;
+
+      // 특별한 개미탕 필터의 경우 무한 스크롤 비활성화
+      if (_isSpecialAntSoupFilter(sortType)) {
+        hasMore.value = false;
+      } else {
+        hasMore.value = true;
+      }
+
       refreshStocks();
     }
   }
 
-  // 새로고침 (정렬 변경시 사용)
-  Future<void> refreshStocks() async {
-    currentPage.value = 1;
-    hasMore.value = true;
-    stocks.clear();
-    await loadStocks();
-  }
-
-  // 종목 로드 (기존 메서드 수정)
+// 종목 로드 메서드 수정
   Future<void> loadStocks() async {
-    if (isLoading.value || !hasMore.value) return;
+    if (isLoading.value || (!hasMore.value && currentPage.value > 1)) return;
+
+    // 특별한 개미탕 필터의 경우 추가 로드 방지
+    if (_isSpecialAntSoupFilter(currentSort.value) && currentPage.value > 1) {
+      print('특별한 개미탕 필터이므로 추가 로드하지 않음');
+      return;
+    }
 
     try {
       isLoading.value = true;
@@ -57,17 +70,33 @@ class StockListController extends GetxController {
         stocks.addAll(newStocks);
         currentPage.value++;
 
-        // 페이지당 종목 수가 pageSize보다 적으면 더 이상 로드할 데이터가 없음
-        if (newStocks.length < pageSize) {
+        // 특별한 개미탕 필터의 경우 항상 더 이상 로드하지 않음
+        if (_isSpecialAntSoupFilter(currentSort.value)) {
+          hasMore.value = false;
+        } else if (newStocks.length < pageSize) {
           hasMore.value = false;
         }
       }
     } catch (e) {
       print('종목 로드 실패: $e');
-      // 에러 처리 로직 추가 가능
     } finally {
       isLoading.value = false;
     }
+  }
+
+// 새로고침 메서드 수정
+  Future<void> refreshStocks() async {
+    currentPage.value = 1;
+
+    // 특별한 개미탕 필터가 아닌 경우에만 hasMore를 true로 설정
+    if (_isSpecialAntSoupFilter(currentSort.value)) {
+      hasMore.value = false;
+    } else {
+      hasMore.value = true;
+    }
+
+    stocks.clear();
+    await loadStocks();
   }
 
   // 종목 상세 페이지로 이동
@@ -76,4 +105,6 @@ class StockListController extends GetxController {
       'stockCode': stockCode,
     });
   }
+
+
 }

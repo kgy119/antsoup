@@ -105,9 +105,133 @@ class StockController extends GetxController {
   void changeSortType(StockSortType sortType) {
     if (currentSort.value != sortType) {
       currentSort.value = sortType;
-      refreshAllStocks();
+
+      // 특별한 개미탕 필터의 경우 전체 데이터를 다시 로드
+      if (_isSpecialAntSoupFilter(sortType)) {
+        refreshAllStocks();
+      } else {
+        refreshAllStocks();
+      }
     }
   }
+
+// 특별한 개미탕 필터인지 확인하는 헬퍼 메서드 추가
+  bool _isSpecialAntSoupFilter(StockSortType sortType) {
+    return sortType == StockSortType.coldAntSoup ||
+        sortType == StockSortType.mixedAntSoup ||
+        sortType == StockSortType.hotAntSoup;
+  }
+
+
+// 전체 종목 로드 메서드 수정
+  Future<void> loadAllStocks() async {
+    print('전체 종목 로드 시작 - 정렬: ${currentSort.value.displayName}');
+
+    // 상태 초기화
+    showAllStocks.value = true;
+    hasSearched.value = false;
+    isLoadingAll.value = true;
+    currentPage.value = 1;
+
+    // 특별한 개미탕 필터의 경우 무한 스크롤 비활성화
+    if (_isSpecialAntSoupFilter(currentSort.value)) {
+      hasMoreData.value = false;
+    } else {
+      hasMoreData.value = true;
+    }
+
+    // 검색창과 검색 결과 클리어
+    searchController.clear();
+    currentKeyword.value = '';
+    searchResults.clear();
+
+    try {
+      final stocks = await _apiProvider.getAllStocks(
+        page: currentPage.value,
+        limit: pageSize,
+        sortBy: currentSort.value.sortKey,
+      );
+
+      if (stocks.isNotEmpty) {
+        allStocks.value = stocks;
+
+        // 특별한 개미탕 필터가 아닌 경우에만 페이징 체크
+        if (!_isSpecialAntSoupFilter(currentSort.value)) {
+          if (stocks.length < pageSize) {
+            hasMoreData.value = false;
+            print('첫 페이지에서 모든 데이터 로드 완료');
+          } else {
+            hasMoreData.value = true;
+            print('더 많은 데이터가 있을 것으로 예상');
+          }
+        }
+
+        print('전체 종목 로드 완료: ${stocks.length}개');
+      } else {
+        // 데이터가 없는 경우
+        allStocks.value = [];
+        hasMoreData.value = false;
+
+        Get.snackbar(
+          '알림',
+          '조회된 종목이 없습니다',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      print('전체 종목 로드 실패: $e');
+      Get.snackbar(
+        '오류',
+        '종목 데이터 로드에 실패했습니다',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingAll.value = false;
+    }
+  }
+
+// 무한 스크롤 로드 메서드 수정
+  Future<void> loadMoreAllStocks() async {
+    // 특별한 개미탕 필터의 경우 추가 로드 방지
+    if (_isSpecialAntSoupFilter(currentSort.value)) {
+      print('특별한 개미탕 필터이므로 추가 로드하지 않음');
+      return;
+    }
+
+    if (isLoadingMore.value || !hasMoreData.value) return;
+
+    print('추가 종목 로드 시작 - 페이지: ${currentPage.value + 1}');
+
+    try {
+      isLoadingMore.value = true;
+
+      final stocks = await _apiProvider.getAllStocks(
+        page: currentPage.value + 1,
+        limit: pageSize,
+        sortBy: currentSort.value.sortKey,
+      );
+
+      if (stocks.isNotEmpty) {
+        allStocks.addAll(stocks);
+        currentPage.value++;
+
+        if (stocks.length < pageSize) {
+          hasMoreData.value = false;
+          print('모든 데이터 로드 완료');
+        }
+
+        print('추가 종목 로드 완료: ${stocks.length}개');
+      } else {
+        hasMoreData.value = false;
+        print('더 이상 로드할 데이터 없음');
+      }
+    } catch (e) {
+      print('추가 종목 로드 실패: $e');
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
 
   // 검색 클리어 메서드
   void clearSearch() {
@@ -120,67 +244,6 @@ class StockController extends GetxController {
     // 전체 종목이 로드되지 않았다면 로드
     if (allStocks.isEmpty) {
       loadAllStocks();
-    }
-  }
-
-  // 전체 종목 로드 (첫 페이지) - 정렬 옵션 포함
-  Future<void> loadAllStocks() async {
-    print('전체 종목 로드 시작 - 정렬: ${AppConstants.getRandomLoadingMessage()}');
-
-    // 상태 초기화
-    showAllStocks.value = true;
-    hasSearched.value = false;
-    isLoadingAll.value = true;
-    currentPage.value = 1;
-    hasMoreData.value = true;
-
-    // 검색창과 검색 결과 클리어
-    searchController.clear();
-    currentKeyword.value = '';
-    searchResults.clear();
-
-    try {
-      final stocks = await _apiProvider.getAllStocks(
-        page: currentPage.value,
-        limit: pageSize,
-        sortBy: currentSort.value.sortKey, // 정렬 옵션 추가
-      );
-
-      if (stocks.isNotEmpty) {
-        allStocks.value = stocks;
-
-        // 받은 데이터가 pageSize보다 적으면 더 이상 데이터가 없음
-        if (stocks.length < pageSize) {
-          hasMoreData.value = false;
-          print('첫 페이지에서 모든 데이터 로드 완료');
-        } else {
-          hasMoreData.value = true;
-          print('더 많은 데이터가 있을 것으로 예상');
-        }
-
-        print('전체 종목 로드 완료: ${stocks.length}개');
-      } else {
-        // 데이터가 없는 경우
-        allStocks.value = [];
-        hasMoreData.value = false;
-
-        Get.snackbar(
-          '알림',
-          AppConstants.networkErrorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      print('전체 종목 로드 실패: $e');
-      allStocks.clear();
-
-      Get.snackbar(
-        '오류',
-        '종목 목록을 불러오는데 실패했습니다: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoadingAll.value = false;
     }
   }
 
